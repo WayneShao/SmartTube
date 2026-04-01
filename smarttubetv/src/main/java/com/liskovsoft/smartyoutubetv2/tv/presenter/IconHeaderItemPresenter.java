@@ -62,6 +62,13 @@ public class IconHeaderItemPresenter extends RowHeaderPresenter {
 
         View rootView = viewHolder.view;
         rootView.setFocusable(true);
+        // MOD RayNeo X3 Pro: temple-touchpad events carry SOURCE_TOUCHSCREEN, putting Android
+        // into touch mode. In touch mode only focusableInTouchMode=true views can receive focus.
+        // Without this, requestFocus() on header items returns false and the VerticalGridView
+        // *container* (which has focusableInTouchMode=true via its style) grabs focus instead
+        // of the item, breaking sidebar navigation. TV devices have no real touch screen so
+        // setting this flag here is harmless for all other platforms.
+        rootView.setFocusableInTouchMode(true);
 
         ImageView iconView = rootView.findViewById(R.id.header_icon);
         if (iconView != null) {

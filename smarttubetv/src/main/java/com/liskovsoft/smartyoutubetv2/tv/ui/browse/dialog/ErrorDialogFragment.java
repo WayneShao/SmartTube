@@ -75,6 +75,17 @@ public class ErrorDialogFragment extends ErrorSupportFragment implements BrowseS
         if (mDialogData.getActionText() != null) {
             setButtonText(mDialogData.getActionText());
             setButtonClickListener(v -> mDialogData.onAction());
+            // MOD RayNeo X3 Pro: temple-touchpad puts Android into touch mode.
+            // Button on TV has focusable=true but focusableInTouchMode=false by default,
+            // so requestFocus() silently fails and the button is unreachable.
+            Button actionBtn = (Button) Helpers.getField(this, "mButton");
+            if (actionBtn != null) {
+                actionBtn.setFocusableInTouchMode(true);
+                android.util.Log.d("RayNeoBtn", "ErrorDialogFragment action button:"
+                        + " focusable=" + actionBtn.isFocusable()
+                        + " focusableInTouchMode=" + actionBtn.isFocusableInTouchMode()
+                        + " text=" + actionBtn.getText());
+            }
         } else {
             Button mButton = (Button) Helpers.getField(this, "mButton");
 

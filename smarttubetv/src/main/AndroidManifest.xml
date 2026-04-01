@@ -64,6 +64,14 @@
         <!-- Not implemented yet( -->
         <!--<meta-data android:name="whisperplay" android:resource="@xml/whisperplay"/>-->
 
+        <!-- RayNeo X3 Pro: required for Mercury to forward temple-touchpad events
+             to this app. Without it cyttsp5 events never reach dispatchTouchEvent.
+             Toast-triggered force-stops are handled by suppressing Toasts on X3 Pro
+             inside MessageHelpers. -->
+        <meta-data
+            android:name="com.rayneo.mercury.app"
+            android:value="true" />
+
         <!-- This activity's name used inside atv channels -->
         <!-- More info: com.liskovsoft.leanbackassistant.utils.AppUtil -->
         <activity

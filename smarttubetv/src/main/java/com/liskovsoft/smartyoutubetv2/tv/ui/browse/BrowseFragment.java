@@ -263,6 +263,8 @@ public class BrowseFragment extends BrowseSupportFragment implements BrowseView 
         Fragment mainFragment = getMainFragment();
 
         if (mainFragment != null && fragment != null && mainFragment != fragment) {
+            android.util.Log.d(TAG, "replaceMainFragment: new=" + fragment.getClass().getSimpleName()
+                    + " hasFocus=" + hasFocus() + " (mFocusOnContent will be set to hasFocus)");
             Helpers.setField(this, "mMainFragment", fragment);
 
             FragmentTransaction ft = getChildFragmentManager().beginTransaction();
@@ -343,6 +345,7 @@ public class BrowseFragment extends BrowseSupportFragment implements BrowseView 
 
     @Override
     public void focusOnContent() {
+        android.util.Log.d(TAG, "focusOnContent: closing sidebar");
         startHeadersTransitionSafe(false);
         if (getMainFragment() != null && getMainFragment().getView() != null) {
             getMainFragment().getView().requestFocus();
@@ -353,6 +356,7 @@ public class BrowseFragment extends BrowseSupportFragment implements BrowseView 
      * Usually called after header transition or fragment transaction
      */
     private void focusOnContentIfNeeded() {
+        android.util.Log.d(TAG, "focusOnContentIfNeeded mFocusOnContent=" + mFocusOnContent);
         if (mFocusOnContent) {
             focusOnContent();
             mFocusOnContent = false;
@@ -389,6 +393,18 @@ public class BrowseFragment extends BrowseSupportFragment implements BrowseView 
         if (!Utils.checkActivity(getActivity())) {
             return;
         }
+
+        // MOD RayNeo diagnostics: log the call-stack so we can see who triggers sidebar open/close.
+        StackTraceElement[] st = Thread.currentThread().getStackTrace();
+        StringBuilder sb = new StringBuilder();
+        // st[0]=getStackTrace, st[1]=startHeadersTransitionSafe, st[2..6]=callers
+        for (int i = 2; i < Math.min(st.length, 7); i++) {
+            sb.append(st[i].getClassName().replaceAll(".*\\.", ""))
+              .append('.').append(st[i].getMethodName())
+              .append(':').append(st[i].getLineNumber());
+            if (i < Math.min(st.length, 7) - 1) sb.append('←');
+        }
+        android.util.Log.d(TAG, "startHeadersTransition(" + withHeaders + ") ← " + sb);
 
         try {
             startHeadersTransition(withHeaders);
