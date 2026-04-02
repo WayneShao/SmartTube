@@ -18,6 +18,7 @@ import com.liskovsoft.smartyoutubetv2.common.prefs.RemoteControlData;
 import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
 import com.liskovsoft.smartyoutubetv2.tv.ui.common.keyhandler.DoubleBackManager2;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity;
+import com.liskovsoft.smartyoutubetv2.tv.ui.rayneo.RayNeoActivityHelper;
 import com.liskovsoft.smartyoutubetv2.tv.ui.rayneo.RayNeoConfig;
 import com.liskovsoft.smartyoutubetv2.tv.ui.rayneo.RayNeoGestureHandler;
 import com.liskovsoft.smartyoutubetv2.tv.ui.rayneo.RayNeoStereoLayout;
@@ -48,37 +49,28 @@ public abstract class LeanbackActivity extends MotherActivity {
         mGlobalKeyTranslator.apply();
         if (RayNeoConfig.isEnabled()) {
             mRayNeoGestureHandler = new RayNeoGestureHandler(this);
+            ensureA11yServiceEnabled();
         }
     }
 
     /**
-     * RayNeo X3 Pro: ensure the app content is wrapped inside {@link RayNeoStereoLayout}
-     * exactly once.  Safe to call multiple times; idempotent if already wrapped.
+     * RayNeo X3 Pro: programmatically enable {@link RayNeoA11yService} using
+     * {@code Settings.Secure}.  Mercury (the RayNeo launcher) automatically clears
+     * accessibility settings on each launch, so we re-register here every time.
      *
-     * <p>This is invoked from both {@link #setContentView} (activities that inflate a
-     * layout resource) and {@link #onStart} (activities that add content via Fragment
-     * transactions without ever calling {@code setContentView}, e.g.
-     * {@code SignInActivity}, account-picker screens).  {@code FragmentActivity.onStart}
-     * calls {@code execPendingActions()} internally, so all pending Fragment transactions
-     * are committed before our {@code onStart} override runs — the child view is
-     * therefore guaranteed to be present by that point.</p>
+     * <p>Requires {@code WRITE_SECURE_SETTINGS}, which must be granted once via ADB:</p>
+     * <pre>
+     *   adb shell pm grant &lt;packageName&gt; android.permission.WRITE_SECURE_SETTINGS
+     * </pre>
+     * If the permission has not been granted, the {@link SecurityException} is silently
+     * caught and logged; the app continues to work (with touch-mode fallbacks).
      */
+    private void ensureA11yServiceEnabled() {
+        RayNeoActivityHelper.ensureA11yServiceEnabled(this);
+    }
+
     private void ensureStereoWrapper() {
-        FrameLayout content = (FrameLayout) getWindow().getDecorView()
-                .findViewById(android.R.id.content);
-        if (content == null || content.getChildCount() == 0) return;
-        // Idempotent: skip if already wrapped.
-        if (content.getChildAt(0) instanceof RayNeoStereoLayout) return;
-        View appRoot = content.getChildAt(0);
-        content.removeView(appRoot);
-        RayNeoStereoLayout stereo = new RayNeoStereoLayout(this);
-        stereo.addView(appRoot, 0,
-                new FrameLayout.LayoutParams(RayNeoConfig.SINGLE_EYE_WIDTH,
-                                             RayNeoConfig.SINGLE_EYE_HEIGHT));
-        content.addView(stereo,
-                new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT));
+        RayNeoActivityHelper.ensureStereoWrapper(this);
     }
 
     /**

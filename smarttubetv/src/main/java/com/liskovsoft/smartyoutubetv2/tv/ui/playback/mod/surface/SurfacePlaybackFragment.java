@@ -15,6 +15,7 @@ import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.manager.PlayerEngine;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
+import com.liskovsoft.smartyoutubetv2.tv.ui.rayneo.RayNeoConfig;
 import com.liskovsoft.smartyoutubetv2.tv.util.ViewUtil;
 
 /**
@@ -33,7 +34,12 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ViewGroup root = (ViewGroup) super.onCreateView(inflater, container, savedInstanceState);
-        mVideoSurfaceWrapper = (PlayerTweaksData.instance(getContext()).isTextureViewEnabled() ||
+        // MOD RayNeo X3 Pro: SurfaceView is composited by the hardware compositor outside the
+        // Canvas pipeline, so RayNeoStereoLayout.dispatchDraw() cannot mirror it to the right eye.
+        // TextureView renders through HWUI as a regular texture and IS captured by dispatchDraw.
+        // Force TextureView on RayNeo so the video frame is included in the stereo mirror.
+        mVideoSurfaceWrapper = (RayNeoConfig.isEnabled() ||
+                PlayerTweaksData.instance(getContext()).isTextureViewEnabled() ||
                 PlayerData.instance(getContext()).getRotationAngle() != 0) ?
                 new TextureViewWrapper(getContext(), root) : new SurfaceViewWrapper(getContext(), root);
         mVideoSurfaceRoot = root.findViewById(com.liskovsoft.smartyoutubetv2.tv.R.id.surface_root);

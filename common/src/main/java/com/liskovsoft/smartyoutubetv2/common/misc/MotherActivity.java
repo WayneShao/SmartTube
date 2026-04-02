@@ -252,6 +252,14 @@ public class MotherActivity extends FragmentActivity {
             float uiScale = MainUIData.instance(context).getUIScale();
             // Take into the account screen orientation (e.g. when running on phone)
             int widthPixels = Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels);
+            // MOD RayNeo X3 Pro (ARGF20 / MercuryLiteXR): the physical screen is 1280×480
+            // (two 640×480 eyes). RayNeoStereoLayout constrains each Activity's content to
+            // 640 px. Use 640 as the reference width so that density = 2.0 × 640/1920 = 0.667,
+            // matching the 1920-px TV layout scaled to fit a single 640-px eye (960dp visible).
+            if (android.os.Build.MODEL.equalsIgnoreCase("ARGF20")
+                    || android.os.Build.DEVICE.equalsIgnoreCase("MercuryLiteXR")) {
+                widthPixels = 640;
+            }
             float widthRatio = DEFAULT_WIDTH / widthPixels;
             float density = DEFAULT_DENSITY / widthRatio * uiScale;
             displayMetrics.density = density;

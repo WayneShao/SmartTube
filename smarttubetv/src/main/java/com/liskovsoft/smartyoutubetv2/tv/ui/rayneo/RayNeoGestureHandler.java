@@ -53,6 +53,12 @@ public class RayNeoGestureHandler {
     private static final float TAP_SLOP = 12f;
     /** Maximum interval (ms) between two taps to recognise a double-tap. */
     private static final long  DOUBLE_TAP_MS = 350L;
+    /**
+     * Maximum interval (ms) between two consecutive ACTION_DOWN events to be
+     * treated as a two-finger tap.  Mercury does not send ACTION_POINTER_DOWN;
+     * instead it fires two separate ACTION_DOWN events in rapid succession.
+     */
+    private static final long  TWO_FINGER_DOWN_MS = 180L;
 
     private final Activity mActivity;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -64,7 +70,19 @@ public class RayNeoGestureHandler {
     private boolean mDidSwipe;         // moved far enough to be a swipe
 
     // --- double-tap state ---
-    private long mLastTapUpTime = -1;
+    // mLastTapUpTime: timestamp of the most recent tap-up, or -1 if none pending.
+    // mPendingSingleTap: delayed runnable for the single-tap action (DPAD_CENTER).
+    //   On second tap within DOUBLE_TAP_MS the runnable is cancelled and BACK is fired instead.
+    //   This prevents the first tap from triggering an unintended action before the double-tap
+    //   is recognised, which made "double-tap = back" unreliable.
+    private long     mLastTapUpTime    = -1;
+    private Runnable mPendingSingleTap = null;
+
+    // --- two-finger detection ---
+    // Mercury does not send ACTION_POINTER_DOWN; it sends two separate ACTION_DOWN events.
+    // We track the timestamp of the previous ACTION_DOWN; if a new ACTION_DOWN arrives
+    // within TWO_FINGER_DOWN_MS we treat the pair as a two-finger tap.
+    private long mLastDownTime = -1;
 
     public RayNeoGestureHandler(Activity activity) {
         mActivity = activity;
@@ -91,19 +109,32 @@ public class RayNeoGestureHandler {
         // to the View hierarchy. This prevents RecyclerView/ScrollView from also
         // interpreting the same touch sequence as a fling/scroll.
         switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                    InputDevice dev = event.getDevice();
-                    Log.d(TAG, "temple DOWN src=0x" + Integer.toHexString(event.getSource())
-                            + " dev=" + (dev != null ? dev.getName() : "null")
-                            + " x=" + event.getX() + " y=" + event.getY());
+            case MotionEvent.ACTION_DOWN: {
+                long nowDown = SystemClock.uptimeMillis();
+                InputDevice dev = event.getDevice();
+                Log.d(TAG, "temple DOWN src=0x" + Integer.toHexString(event.getSource())
+                        + " dev=" + (dev != null ? dev.getName() : "null")
+                        + " x=" + event.getX() + " y=" + event.getY()
+                        + " sincePrevDown=" + (mLastDownTime >= 0 ? (nowDown - mLastDownTime) : "n/a"));
+                // Mercury sends two rapid ACTION_DOWN events instead of ACTION_POINTER_DOWN.
+                // Detect this: if a second DOWN arrives within TWO_FINGER_DOWN_MS, treat it
+                // as a two-finger gesture (mPointerCount = 2) and discard the second DOWN's
+                // coordinates so the pending gesture still resolves as a tap.
+                if (mLastDownTime >= 0 && (nowDown - mLastDownTime) < TWO_FINGER_DOWN_MS) {
+                    mPointerCount = 2;
+                    Log.d(TAG, "temple DOWN → two-finger detected (gap=" + (nowDown - mLastDownTime) + "ms)");
+                    // Do NOT reset mDownX/Y: keep first finger's position so the gesture
+                    // is evaluated as a tap at the original down point.
+                } else {
+                    mDownX        = event.getX();
+                    mDownY        = event.getY();
+                    mDownTime     = nowDown;
+                    mPointerCount = 1;
+                    mDidSwipe     = false;
                 }
-                mDownX        = event.getX();
-                mDownY        = event.getY();
-                mDownTime     = SystemClock.uptimeMillis();
-                mPointerCount = 1;
-                mDidSwipe     = false;
+                mLastDownTime = nowDown;
                 break;
+            }
 
             case MotionEvent.ACTION_POINTER_DOWN:
                 mPointerCount = Math.max(mPointerCount, event.getPointerCount());
@@ -135,11 +166,22 @@ public class RayNeoGestureHandler {
                     } else {
                         long now = SystemClock.uptimeMillis();
                         if (mLastTapUpTime >= 0 && (now - mLastTapUpTime) < DOUBLE_TAP_MS) {
-                            fireKey(KeyEvent.KEYCODE_BACK);
+                            // Second tap within window: cancel pending single-tap, fire BACK.
+                            if (mPendingSingleTap != null) {
+                                mHandler.removeCallbacks(mPendingSingleTap);
+                                mPendingSingleTap = null;
+                            }
                             mLastTapUpTime = -1;
+                            fireKey(KeyEvent.KEYCODE_BACK);
                         } else {
+                            // First tap: delay the DPAD_CENTER action so a quick second tap
+                            // can cancel it and trigger BACK instead.
                             mLastTapUpTime = now;
-                            fireKey(KeyEvent.KEYCODE_DPAD_CENTER);
+                            mPendingSingleTap = () -> {
+                                mPendingSingleTap = null;
+                                fireKey(KeyEvent.KEYCODE_DPAD_CENTER);
+                            };
+                            mHandler.postDelayed(mPendingSingleTap, DOUBLE_TAP_MS);
                         }
                     }
                 }
@@ -176,26 +218,29 @@ public class RayNeoGestureHandler {
     private void fireKey(int keyCode) {
         Log.d(TAG, "fireKey keyCode=" + keyCode + " (" + KeyEvent.keyCodeToString(keyCode) + ")");
         mHandler.post(() -> {
-            // --- diagnostic: log current focus state ---
+            // --- strategy A11y: AccessibilityService navigation (bypasses touch mode entirely) ---
+            RayNeoA11yService a11y = RayNeoA11yService.getInstance();
+            if (a11y != null && tryA11yNavigation(a11y, keyCode)) {
+                return;
+            }
+
+            // --- diagnostic: log current focus state (only when A11y not handling) ---
             View decorView = mActivity.getWindow().getDecorView();
             View focused = decorView.findFocus();
-            Log.d(TAG, "fireKey[post] focused=" + (focused == null
-                    ? "null"
-                    : focused.getClass().getSimpleName() + "#" + Integer.toHexString(focused.getId())));
+            Log.d(TAG, "fireKey[post] a11y=" + (a11y != null ? "connected" : "null")
+                    + " focused=" + viewDesc(focused));
 
-            // --- strategy A: direct focus traversal (avoids touch-mode / dispatch issues) ---
+            // --- strategy A: direct focus traversal ---
             if (tryDirectFocusTraversal(keyCode, focused)) {
                 return;
             }
 
             // --- strategy B: DPAD_LEFT → open Leanback browse sidebar ---
-            // The headers dock is INVISIBLE when hidden; requestFocus fails on invisible views.
-            // We must call startHeadersTransition(true) first, then focus after the animation.
             if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && tryOpenBrowseSidebar()) {
                 return;
             }
 
-            // --- strategy C: key-event injection ---
+            // --- strategy C: key-event injection (last resort; also used for MENU) ---
             long now = SystemClock.uptimeMillis();
             boolean downHandled = mActivity.dispatchKeyEvent(
                     new KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0));
@@ -203,6 +248,31 @@ public class RayNeoGestureHandler {
                     new KeyEvent(now, now, KeyEvent.ACTION_UP,   keyCode, 0));
             Log.d(TAG, "fireKey[inject] down=" + downHandled + " up=" + upHandled);
         });
+    }
+
+    /**
+     * Handle the key via {@link RayNeoA11yService}, which uses the Accessibility Node API
+     * and therefore bypasses Android touch-mode restrictions on {@code requestFocus()}.
+     *
+     * <p>Returns {@code false} for keys with no A11y equivalent (e.g. MENU) so that the
+     * caller falls through to Strategy C (key injection).</p>
+     *
+     * <p>Also returns {@code false} when A11y navigation finds no next node (e.g. when
+     * the Leanback sidebar is hidden and DPAD_LEFT needs Strategy B to open it).</p>
+     */
+    private boolean tryA11yNavigation(RayNeoA11yService a11y, int keyCode) {
+        boolean ok;
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_UP:     ok = a11y.navigate(View.FOCUS_UP);    break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:   ok = a11y.navigate(View.FOCUS_DOWN);  break;
+            case KeyEvent.KEYCODE_DPAD_LEFT:   ok = a11y.navigate(View.FOCUS_LEFT);  break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:  ok = a11y.navigate(View.FOCUS_RIGHT); break;
+            case KeyEvent.KEYCODE_DPAD_CENTER: ok = a11y.click();                    break;
+            case KeyEvent.KEYCODE_BACK:        ok = a11y.back();                     break;
+            default: return false; // MENU etc. — fall through to key injection
+        }
+        Log.d(TAG, "tryA11y keyCode=" + KeyEvent.keyCodeToString(keyCode) + " ok=" + ok);
+        return ok;
     }
 
     /**

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Accessibility service configuration for RayNeo X3 Pro temple-touchpad navigation.
+
+  - canRetrieveWindowContent: required for getRootInActiveWindow() + focusSearch()
+  - flagRetrieveInteractiveWindows: include app windows (not just system UI) in the tree
+  - feedbackGeneric: no audio/haptic feedback — pure programmatic navigation only
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeViewFocused"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/rayneo_a11y_service_description"
+    android:notificationTimeout="100"
+    android:settingsActivity="" />

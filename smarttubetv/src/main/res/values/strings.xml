@@ -118,4 +118,6 @@
     <string name="text_post_results_title">Posts for %s</string>
     <string name="text_no_results">No results</string>
     <string name="error_message_network_needed">Oops, you need a network connection to do that!</string>
+    <!-- RayNeo X3 Pro temple-touchpad navigation service -->
+    <string name="rayneo_a11y_service_description" translatable="false">RayNeo X3 Pro temple touchpad navigation</string>
 </resources>

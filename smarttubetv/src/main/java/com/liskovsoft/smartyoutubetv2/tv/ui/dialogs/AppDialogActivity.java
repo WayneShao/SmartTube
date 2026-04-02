@@ -5,11 +5,15 @@ import android.content.pm.ActivityInfo;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 import androidx.fragment.app.Fragment;
 
 import com.liskovsoft.sharedutils.helpers.KeyHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
+import com.liskovsoft.smartyoutubetv2.tv.ui.rayneo.RayNeoActivityHelper;
+import com.liskovsoft.smartyoutubetv2.tv.ui.rayneo.RayNeoConfig;
+import com.liskovsoft.smartyoutubetv2.tv.ui.rayneo.RayNeoGestureHandler;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.PlaybackView;
 import com.liskovsoft.smartyoutubetv2.common.app.views.ViewManager;
@@ -24,6 +28,8 @@ public class AppDialogActivity extends MotherActivity {
     private static final String TAG = AppDialogActivity.class.getSimpleName();
     private AppDialogFragment mFragment;
     private GlobalKeyTranslator mGlobalKeyTranslator;
+    // MOD RayNeo X3 Pro: gesture handler (null on non-X3Pro devices)
+    private RayNeoGestureHandler mRayNeoGestureHandler;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +40,37 @@ public class AppDialogActivity extends MotherActivity {
 
         mGlobalKeyTranslator = new PlayerKeyTranslator(this);
         mGlobalKeyTranslator.apply();
+
+        // MOD RayNeo X3 Pro: enable gesture input and accessibility service for this dialog
+        if (RayNeoConfig.isEnabled()) {
+            mRayNeoGestureHandler = new RayNeoGestureHandler(this);
+            RayNeoActivityHelper.ensureA11yServiceEnabled(this);
+        }
+    }
+
+    @Override
+    public void setContentView(int layoutResID) {
+        super.setContentView(layoutResID);
+        if (RayNeoConfig.isEnabled()) {
+            RayNeoActivityHelper.ensureStereoWrapper(this);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Cover any Fragment-based content added without setContentView
+        if (RayNeoConfig.isEnabled()) {
+            RayNeoActivityHelper.ensureStereoWrapper(this);
+        }
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (RayNeoActivityHelper.handleTouchEvent(mRayNeoGestureHandler, event)) {
+            return true;
+        }
+        return super.dispatchTouchEvent(event);
     }
 
     @Override

@@ -19,6 +19,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- RayNeo X3 Pro: allows programmatic self-enable of the accessibility service
+         (to survive Mercury's automatic clearing of accessibility settings).
+         Granted once via ADB: adb shell pm grant <packageName> android.permission.WRITE_SECURE_SETTINGS -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
 
     <uses-sdk tools:overrideLibrary="
         androidx.leanback.preference,
@@ -297,6 +301,21 @@
             android:screenOrientation="unspecified"/>
 
         <!-- END Launchers -->
+
+        <!-- RayNeo X3 Pro: accessibility service for touch-mode-free temple navigation -->
+        <service
+            android:name=".ui.rayneo.RayNeoA11yService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/rayneo_a11y_service" />
+        </service>
+
     </application>
 
 </manifest>
