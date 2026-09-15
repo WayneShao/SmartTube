@@ -5,7 +5,7 @@ import android.content.Context;
 
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.okhttp.OkHttpManager;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -52,7 +52,7 @@ public class GeneralSettingsPresenter extends BasePresenter<Void> {
     private final Runnable mOnFinish = () -> {
         if (mRestartApp) {
             mRestartApp = false;
-            MessageHelpers.showLongMessage(getContext(), R.string.msg_restart_app);
+            RayNeoMessages.showLongMessage(getContext(), R.string.msg_restart_app);
         }
     };
 

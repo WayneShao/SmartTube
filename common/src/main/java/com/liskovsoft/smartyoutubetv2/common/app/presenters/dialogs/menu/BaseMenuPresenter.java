@@ -6,7 +6,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
 import com.liskovsoft.mediaserviceinterfaces.data.PlaylistInfo;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
@@ -57,7 +57,7 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
         if (getDialogPresenter() != null) {
             getDialogPresenter().closeDialog();
         }
-        MessageHelpers.cancelToasts();
+        RayNeoMessages.cancelToasts();
     }
 
     protected void appendTogglePinVideoToSidebarButton() {
@@ -79,7 +79,7 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
                             if (original.hasPlaylist()) {
                                 togglePinToSidebar(createPinnedPlaylist(original));
                             } else if (original.hasVideo()) {
-                                MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
+                                RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
 
                                 mServiceManager.loadMetadata(
                                         original,
@@ -103,11 +103,11 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
 
         if (isItemPinned && section.getGroup() == null) { // allow deletion only from the Sidebar
             presenter.unpinItem(section);
-            MessageHelpers.showMessage(getContext(), getContext().getString(R.string.unpinned_from_sidebar));
+            RayNeoMessages.showMessage(getContext(), getContext().getString(R.string.unpinned_from_sidebar));
         } else {
             presenter.pinItem(section);
             section.setGroup(null);
-            MessageHelpers.showMessage(getContext(), getContext().getString(R.string.pinned_to_sidebar));
+            RayNeoMessages.showMessage(getContext(), getContext().getString(R.string.pinned_to_sidebar));
         }
     }
 
@@ -270,7 +270,7 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
 
             if (isSaved && video.belongsToUserPlaylists()) { // allow deletion only from the Playlists section
                 if (video.playlistId == null) {
-                    MessageHelpers.showMessage(getContext(), R.string.cant_delete_empty_playlist);
+                    RayNeoMessages.showMessage(getContext(), R.string.cant_delete_empty_playlist);
                 } else {
                     AppDialogUtil.showConfirmationDialog(getContext(), getContext().getString(R.string.remove_playlist_fmt, video.title), () -> {
                         removePlaylist(video);
@@ -287,13 +287,13 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
         MediaItemService manager = YouTubeMediaItemService.instance();
         Observable<Void> action = manager.removePlaylistObserve(video.playlistId);
         RxHelper.execute(action,
-                (error) -> MessageHelpers.showMessage(getContext(), error.getLocalizedMessage()),
+                (error) -> RayNeoMessages.showMessage(getContext(), error.getLocalizedMessage()),
                 () -> {
                     if (getCallback() != null) {
                         getCallback().onItemAction(getVideo(), VideoMenuCallback.ACTION_REMOVE);
                     }
                     GeneralData.instance(getContext()).setPlaylistOrder(video.playlistId, -1);
-                    MessageHelpers.showMessage(getContext(), getContext().getString(R.string.removed_from_playlists));
+                    RayNeoMessages.showMessage(getContext(), getContext().getString(R.string.removed_from_playlists));
                 }
         );
     }
@@ -302,8 +302,8 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
         MediaItemService manager = YouTubeMediaItemService.instance();
         Observable<Void> action = video.mediaItem != null && video.mediaItem.getPlaylistId() != null ? manager.savePlaylistObserve(video.mediaItem) : manager.savePlaylistObserve(video.playlistId);
         RxHelper.execute(action,
-                (error) -> MessageHelpers.showMessage(getContext(), error.getLocalizedMessage()),
-                () -> MessageHelpers.showMessage(getContext(), getContext().getString(R.string.saved_to_playlists))
+                (error) -> RayNeoMessages.showMessage(getContext(), error.getLocalizedMessage()),
+                () -> RayNeoMessages.showMessage(getContext(), getContext().getString(R.string.saved_to_playlists))
         );
     }
 
@@ -371,12 +371,12 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
                             manager.createPlaylistObserve(newValue, mediaItem);
                     RxHelper.execute(
                             action,
-                            (error) -> MessageHelpers.showMessage(getContext(), error.getLocalizedMessage()),
+                            (error) -> RayNeoMessages.showMessage(getContext(), error.getLocalizedMessage()),
                             () -> {
                                 if (!video.hasVideo()) { // Playlists section
                                     BrowsePresenter.instance(getContext()).refresh();
                                 } else {
-                                    MessageHelpers.showMessage(getContext(), getContext().getString(R.string.saved_to_playlists));
+                                    RayNeoMessages.showMessage(getContext(), getContext().getString(R.string.saved_to_playlists));
                                 }
                             }
                     );
@@ -413,7 +413,7 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
     }
 
     private void showRenamePlaylistDialogUploads(Video video) {
-        MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
+        RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
         mServiceManager.loadChannelUploads(
                 video,
                 mediaGroup -> {
@@ -431,7 +431,7 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
 
     private void showRenamePlaylistDialogSimple(Video video) {
         if (video.getPlaylistId() == null) {
-            MessageHelpers.showMessage(getContext(), R.string.cant_rename_empty_playlist);
+            RayNeoMessages.showMessage(getContext(), R.string.cant_rename_empty_playlist);
             return;
         }
 
@@ -446,7 +446,7 @@ public abstract class BaseMenuPresenter extends BasePresenter<Void> {
                     Observable<Void> action = manager.renamePlaylistObserve(video.getPlaylistId(), newValue);
                     RxHelper.execute(
                             action,
-                            (error) -> MessageHelpers.showMessage(getContext(), R.string.owned_playlist_warning),
+                            (error) -> RayNeoMessages.showMessage(getContext(), R.string.owned_playlist_warning),
                             () -> {
                                 video.title = newValue;
                                 BrowsePresenter.instance(getContext()).syncItem(video);

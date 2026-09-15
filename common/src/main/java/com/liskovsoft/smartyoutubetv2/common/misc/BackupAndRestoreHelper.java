@@ -11,7 +11,7 @@ import android.provider.OpenableColumns;
 
 import com.liskovsoft.sharedutils.helpers.DateHelper;
 import com.liskovsoft.sharedutils.helpers.FileHelpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.settings.BackupSettingsPresenter;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager.OnError;
@@ -164,7 +164,7 @@ public class BackupAndRestoreHelper implements OnResult {
         unpackTempZip(
                 zipUri,
                 () -> BackupSettingsPresenter.instance(mContext).showLocalRestoreDialogApi30(),
-                error -> MessageHelpers.showLongMessage(mContext, "Failed to restore backup: " + error.getMessage())
+                error -> RayNeoMessages.showLongMessage(mContext, "Failed to restore backup: " + error.getMessage())
         );
     }
 
@@ -194,7 +194,7 @@ public class BackupAndRestoreHelper implements OnResult {
 
     private void unpackTempZip(Uri zipUri, Runnable onSuccess, OnError onError) {
         if (zipUri == null) {
-            MessageHelpers.showLongMessage(mContext, "No ZIP received");
+            RayNeoMessages.showLongMessage(mContext, "No ZIP received");
             return;
         }
 

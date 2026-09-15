@@ -2,7 +2,7 @@ package com.liskovsoft.smartyoutubetv2.common.app.presenters.settings;
 
 import android.content.Context;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.UiOptionItem;
@@ -19,7 +19,7 @@ public class UIScaleSettingsPresenter extends BasePresenter<Void> {
     private final Runnable mOnFinish = () -> {
         if (mRestartApp) {
             mRestartApp = false;
-            MessageHelpers.showLongMessage(getContext(), R.string.msg_restart_app);
+            RayNeoMessages.showLongMessage(getContext(), R.string.msg_restart_app);
         }
     };
 

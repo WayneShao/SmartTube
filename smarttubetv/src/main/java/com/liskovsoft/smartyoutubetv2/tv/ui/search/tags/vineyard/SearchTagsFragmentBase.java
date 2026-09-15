@@ -15,7 +15,7 @@ import androidx.leanback.widget.ListRowPresenter;
 import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.RowPresenter.ViewHolder;
 import androidx.leanback.widget.SpeechRecognitionCallback;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.helpers.PermissionHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.smartyoutubetv2.common.app.models.search.SearchTagsProvider;
@@ -305,7 +305,7 @@ public abstract class SearchTagsFragmentBase extends SearchSupportFragment
     private final SpeechRecognitionCallback mDefaultCallback = () -> {
         if (isAdded()) {
             if (PermissionHelpers.hasMicPermissions(getContext())) {
-                MessageHelpers.showMessage(getContext(), R.string.disable_mic_permission);
+                RayNeoMessages.showMessage(getContext(), R.string.disable_mic_permission);
             }
 
             try {

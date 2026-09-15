@@ -25,6 +25,10 @@ public final class StereoLayout extends FrameLayout {
 
     /** A transient message stays in the same stereo window and never enters focus navigation. */
     public void showMessage(CharSequence text) {
+        showMessage(text, 2000);
+    }
+
+    public void showMessage(CharSequence text, long durationMillis) {
         removeCallbacks(hideMessage);
         if (message == null) {
             message = new TextView(getContext());
@@ -53,7 +57,7 @@ public final class StereoLayout extends FrameLayout {
         message.setMaxWidth(Math.max(1, getWidth() / 2 - 48));
         message.setText(text);
         message.setVisibility(View.VISIBLE);
-        postDelayed(hideMessage, 2000);
+        postDelayed(hideMessage, durationMillis);
     }
 
     public void dismissMessage() {
@@ -121,5 +125,13 @@ public final class StereoLayout extends FrameLayout {
                 return;
             }
         }
+    }
+
+    public static StereoLayout findAncestor(View view) {
+        for (View current = view; current != null;
+             current = current.getParent() instanceof View ? (View) current.getParent() : null) {
+            if (current instanceof StereoLayout) return (StereoLayout) current;
+        }
+        return null;
     }
 }

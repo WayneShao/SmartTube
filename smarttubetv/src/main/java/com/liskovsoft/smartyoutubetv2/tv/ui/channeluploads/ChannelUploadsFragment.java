@@ -49,7 +49,7 @@ public class ChannelUploadsFragment extends VideoGridFragment implements Channel
         super.onActivityCreated(savedInstanceState);
 
         // Don't move to onCreateView
-        mProgressBarManager.setRootView((ViewGroup) getActivity().findViewById(android.R.id.content).getRootView());
+        mProgressBarManager.setRootView(com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoWindow.overlayRoot(getActivity()));
 
         mChannelUploadsPresenter.onViewInitialized();
 

@@ -5,7 +5,7 @@ import android.content.Context;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -399,7 +399,7 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
                     VideoGroup update = VideoGroup.from(items);
 
                     if (update.isEmpty()) {
-                        MessageHelpers.showMessage(getContext(), R.string.nothing_found);
+                        RayNeoMessages.showMessage(getContext(), R.string.nothing_found);
                         return;
                     }
 

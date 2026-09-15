@@ -7,7 +7,7 @@ import androidx.preference.ListPreference;
 import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.SwitchPreference;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionCategory;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
 import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
@@ -214,7 +214,7 @@ public class AppPreferenceManager {
                             if (requiredItems != null) {
                                 for (OptionItem requiredItem : requiredItems) {
                                     if (!requiredItem.isSelected()) {
-                                        MessageHelpers.showMessage(mContext, mContext.getString(R.string.require_checked, requiredItem.getTitle()));
+                                        RayNeoMessages.showMessage(mContext, mContext.getString(R.string.require_checked, requiredItem.getTitle()));
                                     }
                                 }
                             }

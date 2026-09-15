@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import com.liskovsoft.appupdatechecker2.AppUpdateChecker;
 import com.liskovsoft.appupdatechecker2.AppUpdateCheckerListener;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.errors.ErrorFragmentData;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
@@ -77,9 +77,9 @@ public class AppUpdatePresenter extends BasePresenter<Void> implements AppUpdate
             LoadingManager.showLoading(getContext(), false);
 
             if (AppUpdateCheckerListener.LATEST_VERSION.equals(error.getMessage())) {
-                MessageHelpers.showMessage(getContext(), R.string.update_not_found);
+                RayNeoMessages.showMessage(getContext(), R.string.update_not_found);
             } else {
-                MessageHelpers.showMessage(getContext(), String.format("%s: %s", getContext().getString(R.string.update_error),
+                RayNeoMessages.showMessage(getContext(), String.format("%s: %s", getContext().getString(R.string.update_error),
                         error.getCause() != null ? error.getCause().getMessage() : error.getMessage()));
             }
         }

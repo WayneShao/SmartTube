@@ -3,7 +3,7 @@ package com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers;
 import android.annotation.SuppressLint;
 
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -55,13 +55,13 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
             if (!isGoogleDns && !getPlayerTweaksData().isNetworkErrorFixingDisabled()) {
                 // Wrong DNS resolution could cause hanging at start
                 // Do switch to only engine that respects custom DNS settings
-                MessageHelpers.showLongMessage(getContext(), "Fixing wrong DNS resolution...");
+                RayNeoMessages.showLongMessage(getContext(), "Fixing wrong DNS resolution...");
                 getPlayerTweaksData().setPlayerDataSource(PlayerTweaksData.PLAYER_DATA_SOURCE_OKHTTP);
                 getPlayerTweaksData().setPreferredDnsType(PlayerTweaksData.DNS_TYPE_GOOGLE);
                 mVideoLoaderController.restartEngine();
             } else {
                 // Also, some clients like ANDROID_REEL may just hang at start
-                MessageHelpers.showLongMessage(getContext(), "Fixing stalled client...");
+                RayNeoMessages.showLongMessage(getContext(), "Fixing stalled client...");
                 YouTubeServiceManager.instance().switchNextClientNow();
                 mVideoLoaderController.reloadVideo();
             }
@@ -228,7 +228,7 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
         }
 
         if (showMessage) {
-            MessageHelpers.showLongMessage(getContext(), errorMessage);
+            RayNeoMessages.showLongMessage(getContext(), errorMessage);
             if (getPlayer() != null) {
                 getPlayer().setTitle(errorContent);
             }
@@ -309,7 +309,7 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
         Log.e(TAG, fullMsg);
 
         if (!Helpers.containsAny(message, "fromNullable result is null")) {
-            MessageHelpers.showLongMessage(getContext(), fullMsg);
+            RayNeoMessages.showLongMessage(getContext(), fullMsg);
             if (getPlayer() != null) {
                 getPlayer().setTitle(fullMsg);
             }

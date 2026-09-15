@@ -18,6 +18,7 @@ import androidx.appcompat.view.WindowCallbackWrapper;
 
 /** Public Window APIs only: content, input, and pending gestures share window ownership. */
 public final class RayNeoWindow extends WindowCallbackWrapper {
+    private static java.lang.ref.WeakReference<RayNeoWindow> foreground = new java.lang.ref.WeakReference<>(null);
     private final Window window;
     private final TempleInput input;
     private StereoLayout root;
@@ -39,6 +40,16 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
 
     /** Returns false when the caller should retain its normal system message path. */
     public static boolean showMessage(Context context, int messageResId) {
+        return showMessage(context, context.getText(messageResId), false);
+    }
+
+    public static boolean showMessage(Context context, CharSequence text, boolean isLong) {
+        if (!RayNeo.isEnabled(context)) return false;
+        RayNeoWindow activeWindow = foreground.get();
+        if (activeWindow != null && activeWindow.active()) {
+            activeWindow.root.showMessage(text, isLong ? 3500 : 2000);
+            return true;
+        }
         Context owner = context;
         while (owner instanceof ContextWrapper && !(owner instanceof Activity)) {
             Context base = ((ContextWrapper) owner).getBaseContext();
@@ -50,8 +61,21 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
         if (!(callback instanceof RayNeoWindow)) return false;
         RayNeoWindow stereo = (RayNeoWindow) callback;
         if (!stereo.active()) return false;
-        stereo.root.showMessage(context.getText(messageResId));
+        stereo.root.showMessage(text, isLong ? 3500 : 2000);
         return true;
+    }
+
+    public static void dismissMessages() {
+        RayNeoWindow current = foreground.get();
+        if (current != null && current.root != null) current.root.dismissMessage();
+    }
+
+    public static ViewGroup overlayRoot(Activity activity) {
+        ViewGroup content = activity.findViewById(android.R.id.content);
+        if (content.getChildCount() > 0 && content.getChildAt(0) instanceof StereoLayout) {
+            return (ViewGroup) content.getChildAt(0);
+        }
+        return (ViewGroup) content.getRootView();
     }
 
     public static void install(Dialog dialog) {
@@ -112,6 +136,7 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         callback.navigator = new FocusNavigator(stereo, callback::dispatchNavigationKey);
+        if (callback.active()) foreground = new java.lang.ref.WeakReference<>(callback);
         stereo.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override public void onViewAttachedToWindow(View view) {
                 callback.navigator.close();
@@ -143,7 +168,10 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
             if (navigator != null) navigator.cancel();
             if (root != null) root.dismissMessage();
         }
-        else if (navigator != null) navigator.prepare();
+        else if (navigator != null) {
+            foreground = new java.lang.ref.WeakReference<>(this);
+            navigator.prepare();
+        }
         super.onWindowFocusChanged(focused);
     }
 

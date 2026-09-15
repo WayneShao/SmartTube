@@ -82,7 +82,7 @@ public class ChannelFragment extends MultipleRowsFragment implements ChannelView
         }
 
         // Don't move to onCreateView
-        mProgressBarManager.setRootView((ViewGroup) getActivity().findViewById(android.R.id.content).getRootView());
+        mProgressBarManager.setRootView(com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoWindow.overlayRoot(getActivity()));
 
         mChannelPresenter.onViewInitialized();
         

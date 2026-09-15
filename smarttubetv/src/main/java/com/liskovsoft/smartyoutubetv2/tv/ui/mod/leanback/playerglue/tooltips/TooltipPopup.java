@@ -48,6 +48,7 @@ class TooltipPopup {
     private final Context mContext;
 
     private final View mContentView;
+    private com.liskovsoft.smartyoutubetv2.common.rayneo.StereoLayout mStereoRoot;
     private final TextView mMessageView;
 
     private final WindowManager.LayoutParams mLayoutParams = new WindowManager.LayoutParams();
@@ -80,6 +81,28 @@ class TooltipPopup {
 
         mMessageView.setText(tooltipText);
 
+        mStereoRoot = com.liskovsoft.smartyoutubetv2.common.rayneo.StereoLayout.findAncestor(anchorView);
+        if (mStereoRoot != null) {
+            mContentView.setFocusable(false);
+            mContentView.setClickable(false);
+            mContentView.setElevation(8 * mContext.getResources().getDisplayMetrics().density);
+            int[] anchor = new int[2], root = new int[2];
+            anchorView.getLocationOnScreen(anchor);
+            mStereoRoot.getLocationOnScreen(root);
+            int eyeWidth = mStereoRoot.getWidth() / 2;
+            mContentView.measure(View.MeasureSpec.makeMeasureSpec(Math.max(1, eyeWidth - 24), View.MeasureSpec.AT_MOST),
+                    View.MeasureSpec.makeMeasureSpec(mStereoRoot.getHeight(), View.MeasureSpec.AT_MOST));
+            android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
+                    mContentView.getMeasuredWidth(), mContentView.getMeasuredHeight());
+            params.leftMargin = Math.max(0, Math.min(eyeWidth - params.width,
+                    anchor[0] - root[0] + anchorView.getWidth() / 2 - params.width / 2));
+            int below = anchor[1] - root[1] + anchorView.getHeight() + 8;
+            params.topMargin = Math.max(0, below + params.height <= mStereoRoot.getHeight()
+                    ? below : anchor[1] - root[1] - params.height - 8);
+            mStereoRoot.addView(mContentView, params);
+            return;
+        }
+
         computePosition(anchorView, anchorX, anchorY, fromTouch, mLayoutParams);
 
         WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
@@ -91,6 +114,11 @@ class TooltipPopup {
             return;
         }
 
+        if (mStereoRoot != null) {
+            mStereoRoot.removeView(mContentView);
+            mStereoRoot = null;
+            return;
+        }
         WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
         wm.removeView(mContentView);
     }

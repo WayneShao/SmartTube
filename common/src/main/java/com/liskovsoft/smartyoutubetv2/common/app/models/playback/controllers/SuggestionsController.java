@@ -12,7 +12,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.DislikeData;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
@@ -263,7 +263,7 @@ public class SuggestionsController extends BasePlayerController {
                             String message = error.getMessage();
                             Log.e(TAG, "loadSuggestions error: %s", message);
                             if (!Helpers.containsAny(message, "fromNullable result is null")) {
-                                MessageHelpers.showLongMessage(getContext(), "loadSuggestions error: %s", message);
+                                RayNeoMessages.showLongMessage(getContext(), "loadSuggestions error: %s", message);
                             }
                             error.printStackTrace();
                         }

@@ -7,7 +7,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.CommentGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.CommentItem;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
@@ -134,7 +134,7 @@ public class CommentsController extends BasePlayerController {
             }
 
             if (mCommentsKey == null && mLiveChatKey == null) {
-                MessageHelpers.showMessage(getContext(), R.string.comments_disabled);
+                RayNeoMessages.showMessage(getContext(), R.string.comments_disabled);
             }
         }
     }
@@ -182,7 +182,7 @@ public class CommentsController extends BasePlayerController {
         receiver.sync(myCommentItem);
 
         RxHelper.execute(
-                getCommentsService().toggleLikeObserve(commentItem.getNestedCommentsKey()), e -> MessageHelpers.showMessage(getContext(), e.getMessage()));
+                getCommentsService().toggleLikeObserve(commentItem.getNestedCommentsKey()), e -> RayNeoMessages.showMessage(getContext(), e.getMessage()));
     }
 
     private static final class MyCommentItem implements CommentItem {

@@ -2,7 +2,7 @@ package com.liskovsoft.smartyoutubetv2.tv.ui.common.keyhandler;
 
 import android.content.Context;
 
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
 public class DoubleBackManager2 {
@@ -37,7 +37,7 @@ public class DoubleBackManager2 {
     private void showMsg() {
         if (mRepeatCount == (DEFAULT_REPEAT_COUNT - 1)) {
             if (!com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoWindow.showMessage(mContext, R.string.msg_press_again_to_exit)) {
-                MessageHelpers.showMessage(mContext, R.string.msg_press_again_to_exit);
+                RayNeoMessages.showMessage(mContext, R.string.msg_press_again_to_exit);
             }
             mMsgShownTimeMs = System.currentTimeMillis();
         }

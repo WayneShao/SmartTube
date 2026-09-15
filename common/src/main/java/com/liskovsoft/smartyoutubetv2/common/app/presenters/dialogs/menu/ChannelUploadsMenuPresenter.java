@@ -5,7 +5,7 @@ import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import com.liskovsoft.mediaserviceinterfaces.ServiceManager;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -153,7 +153,7 @@ public class ChannelUploadsMenuPresenter extends BaseMenuPresenter {
         mDialogPresenter.appendSingleButton(
                 UiOptionItem.from(getContext().getString(R.string.mark_channel_as_watched), optionItem -> {
                     mServiceManager.loadChannelUploads(mVideo, (group) -> {});
-                    MessageHelpers.showMessage(getContext(), R.string.channel_marked_as_watched);
+                    RayNeoMessages.showMessage(getContext(), R.string.channel_marked_as_watched);
                 }));
     }
 
@@ -169,7 +169,7 @@ public class ChannelUploadsMenuPresenter extends BaseMenuPresenter {
             mDialogPresenter.closeDialog();
             mCallback.onItemAction(mVideo, VideoMenuCallback.ACTION_UNSUBSCRIBE);
         } else {
-            MessageHelpers.showMessage(getContext(), R.string.unsubscribed_from_channel);
+            RayNeoMessages.showMessage(getContext(), R.string.unsubscribed_from_channel);
         }
     }
 }

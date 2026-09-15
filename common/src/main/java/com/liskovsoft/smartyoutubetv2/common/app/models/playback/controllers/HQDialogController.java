@@ -1,6 +1,6 @@
 package com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers;
 
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.BasePlayerController;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionCategory;
@@ -97,7 +97,7 @@ public class HQDialogController extends BasePlayerController {
 
         if (getPlayerData().getFormat(formatItem.getType()).isPreset()) {
             // Preset currently active. Show warning about format reset.
-            MessageHelpers.showMessage(getContext(), R.string.video_preset_enabled);
+            RayNeoMessages.showMessage(getContext(), R.string.video_preset_enabled);
         }
 
         if (!getPlayer().containsMedia()) {

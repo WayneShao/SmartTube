@@ -8,9 +8,10 @@ public class AddDeviceActivity extends LeanbackActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        int container = com.liskovsoft.smartyoutubetv2.tv.ui.common.GuidedContent.install(this);
 
         if (null == savedInstanceState) {
-            GuidedStepSupportFragment.addAsRoot(this, new AddDeviceFragment(), android.R.id.content);
+            GuidedStepSupportFragment.addAsRoot(this, new AddDeviceFragment(), container);
         }
     }
 

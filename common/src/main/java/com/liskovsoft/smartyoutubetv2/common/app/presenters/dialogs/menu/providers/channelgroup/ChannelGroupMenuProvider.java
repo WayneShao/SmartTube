@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 
 import com.liskovsoft.mediaserviceinterfaces.data.ItemGroup;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -56,7 +56,7 @@ public class ChannelGroupMenuProvider extends ContextMenuProvider {
         if (item.hasChannel()) {
             showGroupDialog(item, callback);
         } else {
-            MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
+            RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
 
             MediaServiceManager.instance().loadMetadata(item, metadata -> {
                 item.sync(metadata);
@@ -93,13 +93,13 @@ public class ChannelGroupMenuProvider extends ContextMenuProvider {
 
                         if (Helpers.startsWith(newValue, "http")) {
                             RxHelper.execute(mService.importGroupsObserve(Uri.parse(newValue)), this::pinGroups,
-                                    error -> MessageHelpers.showLongMessage(getContext(), error.getMessage()));
+                                    error -> RayNeoMessages.showLongMessage(getContext(), error.getMessage()));
                         } else {
                             ItemGroup group = mService.createChannelGroup(newValue, null,
                                     Collections.singletonList(mService.createChannel(item.getAuthor(), item.cardImageUrl, item.channelId)));
                             mService.addChannelGroup(group);
                             BrowsePresenter.instance(getContext()).pinItem(Video.from(group));
-                            MessageHelpers.showMessage(getContext(), getContext().getString(R.string.pinned_to_sidebar));
+                            RayNeoMessages.showMessage(getContext(), getContext().getString(R.string.pinned_to_sidebar));
                         }
                         return true;
                     });
@@ -141,6 +141,6 @@ public class ChannelGroupMenuProvider extends ContextMenuProvider {
         for (ItemGroup group : newGroups) {
             BrowsePresenter.instance(getContext()).pinItem(Video.from(group));
         }
-        MessageHelpers.showMessage(getContext(), getContext().getString(R.string.pinned_to_sidebar));
+        RayNeoMessages.showMessage(getContext(), getContext().getString(R.string.pinned_to_sidebar));
     }
 }

@@ -10,7 +10,7 @@ import com.liskovsoft.googleapi.service.DriveService;
 import com.liskovsoft.googleapi.oauth2.impl.GoogleSignInService;
 import com.liskovsoft.sharedutils.helpers.FileHelpers;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
@@ -91,7 +91,7 @@ public class GDriveBackupManager {
 
         if (RxHelper.isAnyActionRunning(mBackupAction, mRestoreAction)) {
             if (!mIsBlocking)
-                MessageHelpers.showMessage(mContext, R.string.wait_data_loading);
+                RayNeoMessages.showMessage(mContext, R.string.wait_data_loading);
             return;
         }
 
@@ -104,7 +104,7 @@ public class GDriveBackupManager {
 
     public void restore() {
         if (RxHelper.isAnyActionRunning(mBackupAction, mRestoreAction)) {
-            MessageHelpers.showMessage(mContext, R.string.wait_data_loading);
+            RayNeoMessages.showMessage(mContext, R.string.wait_data_loading);
             return;
         }
 
@@ -140,19 +140,19 @@ public class GDriveBackupManager {
         if (mIsBlocking) {
             RxHelper.runBlocking(uploadFile);
         } else {
-            MessageHelpers.showLongMessage(mContext, mContext.getString(R.string.app_backup));
+            RayNeoMessages.showLongMessage(mContext, mContext.getString(R.string.app_backup));
             mBackupAction = uploadFile
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             unused -> {},
                             error -> {
-                                MessageHelpers.showLongMessage(mContext, error.getMessage());
+                                RayNeoMessages.showLongMessage(mContext, error.getMessage());
                                 if (Helpers.startsWith(error.getMessage(), "AuthError")) {
                                     logIn(this::startBackupConfirm); // auth data outdated (AuthError: invalid_grant)
                                 }
                             },
-                            () -> MessageHelpers.showMessage(mContext, R.string.msg_done)
+                            () -> RayNeoMessages.showMessage(mContext, R.string.msg_done)
                     );
         }
     }
@@ -179,7 +179,7 @@ public class GDriveBackupManager {
                         if (name == null)
                             continue;
 
-                        MessageHelpers.showLongMessage(mContext, mContext.getString(R.string.app_restore) + "\n" + name);
+                        RayNeoMessages.showLongMessage(mContext, mContext.getString(R.string.app_restore) + "\n" + name);
 
                         DriveService.getFile(Uri.parse(String.format("%s/%s", backupDir, name)))
                                 .blockingSubscribe(inputStream -> FileHelpers.copy(inputStream, new File(mSharedPrefs, fixAltPackageName(name))));
@@ -191,12 +191,12 @@ public class GDriveBackupManager {
                 }, error -> {
                     if (onError != null)
                         onError.run();
-                    else MessageHelpers.showLongMessage(mContext, error.getMessage());
+                    else RayNeoMessages.showLongMessage(mContext, error.getMessage());
                 });
     }
 
     private void startRestore(String backupDir, Runnable onError) {
-        MessageHelpers.showLongMessage(mContext, mContext.getString(R.string.app_restore));
+        RayNeoMessages.showLongMessage(mContext, mContext.getString(R.string.app_restore));
         mRestoreAction = DriveService.getFile(Uri.parse(String.format("%s/%s", backupDir, BACKUP_NAME)))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -224,8 +224,8 @@ public class GDriveBackupManager {
                 }, error -> {
                     if (onError != null)
                         onError.run();
-                    else MessageHelpers.showLongMessage(mContext, error.getMessage());
-                }, () -> MessageHelpers.showMessage(mContext, R.string.msg_done));
+                    else RayNeoMessages.showLongMessage(mContext, error.getMessage());
+                }, () -> RayNeoMessages.showMessage(mContext, R.string.msg_done));
     }
 
     private void logIn(Runnable onDone) {
@@ -281,7 +281,7 @@ public class GDriveBackupManager {
                 .subscribe(
                         this::showLocalRestoreDialog,
                         error -> {
-                            MessageHelpers.showLongMessage(mContext, error.getMessage());
+                            RayNeoMessages.showLongMessage(mContext, error.getMessage());
                             if (Helpers.startsWith(error.getMessage(), "AuthError")) {
                                 logIn(this::startRestoreConfirm); // auth data outdated (AuthError: invalid_grant)
                             }
@@ -293,7 +293,7 @@ public class GDriveBackupManager {
         if (backups != null && !backups.isEmpty()) {
             showLocalRestoreSelectorDialog(backups);
         } else {
-            MessageHelpers.showLongMessage(mContext, R.string.nothing_found);
+            RayNeoMessages.showLongMessage(mContext, R.string.nothing_found);
         }
     }
 

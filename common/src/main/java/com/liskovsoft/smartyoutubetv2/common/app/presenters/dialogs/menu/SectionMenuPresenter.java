@@ -6,7 +6,7 @@ import androidx.annotation.Nullable;
 
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -239,7 +239,7 @@ public class SectionMenuPresenter extends BaseMenuPresenter {
 
                     MediaServiceManager serviceManager = MediaServiceManager.instance();
 
-                    MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
+                    RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
 
                     serviceManager.loadSubscribedChannels(group -> {
                         Iterator<MediaItem> iterator = group.getMediaItems().iterator();
@@ -258,10 +258,10 @@ public class SectionMenuPresenter extends BaseMenuPresenter {
                 return;
             }
 
-            MessageHelpers.showMessage(getContext(), next.getTitle());
+            RayNeoMessages.showMessage(getContext(), next.getTitle());
             serviceManager.loadChannelUploads(next, (groupTmp) -> processNextChannel(serviceManager, iterator));
         } else {
-            MessageHelpers.showMessage(getContext(), R.string.msg_done);
+            RayNeoMessages.showMessage(getContext(), R.string.msg_done);
         }
     }
 

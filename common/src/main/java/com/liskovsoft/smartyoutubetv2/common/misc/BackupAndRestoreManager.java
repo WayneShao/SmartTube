@@ -9,7 +9,7 @@ import android.os.Handler;
 import com.liskovsoft.sharedutils.helpers.AppInfoHelpers;
 import com.liskovsoft.sharedutils.helpers.FileHelpers;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.helpers.PermissionHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
@@ -210,7 +210,7 @@ public class BackupAndRestoreManager implements MotherActivity.OnPermissions {
 
         if (FileHelpers.isEmpty(sharedPrefsBackupDir)) {
             Log.d(TAG, "Oops. Backup folder is empty.");
-            MessageHelpers.showLongMessage(mContext, "Oops. Backup folder is empty.");
+            RayNeoMessages.showLongMessage(mContext, "Oops. Backup folder is empty.");
             return;
         }
 
@@ -223,7 +223,7 @@ public class BackupAndRestoreManager implements MotherActivity.OnPermissions {
         FileHelpers.copy(filesBackupDir, mFilesDir);
         fixFileNames(mSharedPrefsDir);
 
-        MessageHelpers.showMessage(mContext, R.string.msg_done);
+        RayNeoMessages.showMessage(mContext, R.string.msg_done);
 
         // NOTE: Don't restart the app, just kill. The reboot will broke the files.
         // To apply settings we need to kill the app

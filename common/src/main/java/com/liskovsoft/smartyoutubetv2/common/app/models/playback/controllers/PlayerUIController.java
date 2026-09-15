@@ -14,7 +14,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.NotificationState;
 import com.liskovsoft.mediaserviceinterfaces.data.PlaylistInfo;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.helpers.KeyHelpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
@@ -429,13 +429,13 @@ public class PlayerUIController extends BasePlayerController {
         getPlayer().setButtonState(R.id.action_thumbs_down, !dislike ? PlayerUI.BUTTON_ON : PlayerUI.BUTTON_OFF);
 
         if (!mIsMetadataLoaded) {
-            MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
+            RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
             return;
         }
 
         if (!YouTubeSignInService.instance().isSigned()) {
             getPlayer().setButtonState(R.id.action_thumbs_down, PlayerUI.BUTTON_OFF);
-            MessageHelpers.showMessage(getContext(), R.string.msg_signed_users_only);
+            RayNeoMessages.showMessage(getContext(), R.string.msg_signed_users_only);
             return;
         }
 
@@ -456,13 +456,13 @@ public class PlayerUIController extends BasePlayerController {
         getPlayer().setButtonState(R.id.action_thumbs_up, !like ? PlayerUI.BUTTON_ON : PlayerUI.BUTTON_OFF);
 
         if (!mIsMetadataLoaded) {
-            MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
+            RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
             return;
         }
 
         if (!YouTubeSignInService.instance().isSigned()) {
             getPlayer().setButtonState(R.id.action_thumbs_up, PlayerUI.BUTTON_OFF);
-            MessageHelpers.showMessage(getContext(), R.string.msg_signed_users_only);
+            RayNeoMessages.showMessage(getContext(), R.string.msg_signed_users_only);
             return;
         }
 
@@ -487,7 +487,7 @@ public class PlayerUIController extends BasePlayerController {
         fitVideoIntoDialog();
 
         if (!mIsMetadataLoaded) {
-            MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
+            RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
             return;
         }
 
@@ -500,7 +500,7 @@ public class PlayerUIController extends BasePlayerController {
         String description = video.description;
 
         if (description == null || description.isEmpty()) {
-            MessageHelpers.showMessage(getContext(), R.string.description_not_found);
+            RayNeoMessages.showMessage(getContext(), R.string.description_not_found);
             return;
         }
 
@@ -744,7 +744,7 @@ public class PlayerUIController extends BasePlayerController {
                 case PlayerData.OK_TOGGLE_SPEED:
                     getMainController().onButtonClicked(R.id.action_video_speed, getPlayer().getButtonState(R.id.action_video_speed));
                     float speed = getPlayerData().getSpeed();
-                    MessageHelpers.showMessage(getContext(), String.format("%sx", speed));
+                    RayNeoMessages.showMessage(getContext(), String.format("%sx", speed));
                     return true;
             }
         }
@@ -770,7 +770,7 @@ public class PlayerUIController extends BasePlayerController {
                 long positionMs = (long) (getPlayer().getDurationMs() * seekPercent);
                 getPlayer().setPositionMs(positionMs);
                 getController(VideoStateController.class).onSeekPositionChanged(positionMs); // disable live window
-                MessageHelpers.showMessage(getContext(), ServiceHelper.millisToTimeText(positionMs));
+                RayNeoMessages.showMessage(getContext(), ServiceHelper.millisToTimeText(positionMs));
             }
         }
 
@@ -1004,7 +1004,7 @@ public class PlayerUIController extends BasePlayerController {
         }
 
         if (!mIsMetadataLoaded) {
-            MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
+            RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
             return;
         }
 
@@ -1120,7 +1120,7 @@ public class PlayerUIController extends BasePlayerController {
         for (NotificationState item : getVideo().notificationStates) {
             items.add(UiOptionItem.from(item.getTitle(), optionItem -> {
                 if (optionItem.isSelected()) {
-                    MediaServiceManager.instance().setNotificationState(item, error -> MessageHelpers.showMessage(getContext(), error.getLocalizedMessage()));
+                    MediaServiceManager.instance().setNotificationState(item, error -> RayNeoMessages.showMessage(getContext(), error.getLocalizedMessage()));
                     getVideo().isSubscribed = true;
                     getPlayer().setButtonState(R.id.action_subscribe, PlayerUI.BUTTON_ON);
                 }

@@ -29,8 +29,8 @@ fallback. Other system/background Toast producers are outside this scoped change
   process remained alive and crash buffer was empty.
 - On-device BACK-key checks opened the sidebar and displayed the exit prompt.
   Screenshot confirmed “再按一次退出” in both eye regions, at matching positions.
-- Physical RIGHT swipe from the sidebar is awaiting the user's current check.
-  A native ADB RIGHT key alone would not prove the synthetic-key traversal fix.
+- The user confirmed physical RIGHT swipe successfully returns from the sidebar
+  to the content area.
 
 ## Artifact
 

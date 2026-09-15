@@ -2,7 +2,7 @@
 
 Based on SmartTube 32.47 (`249bc833f`). Branch: `rayneo/x3pro`.
 Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
-version `32.47-rayneo.3`. This package can coexist with official SmartTube.
+version `32.47-rayneo.4`. This package can coexist with official SmartTube.
 
 ## Display and input
 
@@ -34,7 +34,8 @@ on new frames. Tunneling is disabled on this path.
 
 | Entry | Implementation |
 |---|---|
-| Browse, search, channel/uploads, sign-in/link, web, player, splash/launchers | `MotherActivity.onContentChanged` |
+| Browse, search, channel/uploads, web, player | `MotherActivity.onContentChanged` |
+| Sign-in and add-device guided pages | Stable `GuidedContent` container before async Fragment transaction |
 | Settings, playback options, comments/chat, list/radio preferences, errors | Existing Activity/Fragment content, same stereo root |
 | Text-edit AlertDialog and proxy AlertDialog | Complete dialog content, including title/buttons; public Window APIs |
 | Local file selection | `RayNeoFilePickerActivity` adapter |
@@ -66,7 +67,7 @@ keyPassword=YOUR_LOCAL_PASSWORD
 
 `storeFile` is resolved relative to `smarttubetv/`. Keystores, properties, APKs and
 local artifacts are ignored by Git. Keep the signing material for future updates.
-Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v3/`.
+Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v4/`.
 
 ## Verification boundary
 
@@ -81,3 +82,5 @@ animated controls; all listed pages/dialogs; cursor four-direction motion and
 scrolling; tap/double-tap/long-press; cancel/reopen dialogs; background/return;
 video replacement, resize/rotation/zoom; search/text entry. No device installation
 or runtime acceptance is implied by the first code push.
+
+Full creation-path and overlay inventory: [WINDOW-COVERAGE.md](WINDOW-COVERAGE.md).

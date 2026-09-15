@@ -10,7 +10,7 @@ import com.liskovsoft.mediaserviceinterfaces.ServiceManager;
 import com.liskovsoft.mediaserviceinterfaces.RemoteControlService;
 import com.liskovsoft.mediaserviceinterfaces.data.Command;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.sharedutils.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
@@ -252,13 +252,13 @@ public class RemoteController extends BasePlayerController implements OnDataChan
                         error -> {
                             String msg = "startListening error: " + error.getMessage();
                             Log.e(TAG, msg);
-                            MessageHelpers.showLongMessage(getContext(), msg);
+                            RayNeoMessages.showLongMessage(getContext(), msg);
                         },
                         () -> {
                             // Some users seeing this.
                             // This msg couldn't appear in normal situation.
                             Log.d(TAG, "Remote session has been closed");
-                            //MessageHelpers.showMessage(getActivity(), R.string.remote_session_closed);
+                            //RayNeoMessages.showMessage(getActivity(), R.string.remote_session_closed);
                         }
                 );
     }
@@ -441,10 +441,10 @@ public class RemoteController extends BasePlayerController implements OnDataChan
                 //if (getActivity() != null && mRemoteControlData.isFinishOnDisconnectEnabled()) {
                 //    // NOTE: It's not a good idea to remember connection state (mConnected) at this point.
                 //    Utils.moveAppToForeground(getActivity());
-                //    MessageHelpers.showLongMessage(getActivity(), getActivity().getString(R.string.device_connected, command.getDeviceName()));
+                //    RayNeoMessages.showLongMessage(getActivity(), getActivity().getString(R.string.device_connected, command.getDeviceName()));
                 //}
                 //if (mRemoteControlData.isConnectMessagesEnabled()) {
-                //    MessageHelpers.showLongMessage(getActivity(), getActivity().getString(R.string.device_connected, command.getDeviceName()));
+                //    RayNeoMessages.showLongMessage(getActivity(), getActivity().getString(R.string.device_connected, command.getDeviceName()));
                 //}
                 registerVolumeObserver();
                 mRemoteControlData.setConnectedBefore(true);
@@ -453,11 +453,11 @@ public class RemoteController extends BasePlayerController implements OnDataChan
                 // NOTE: there are possible false calls when mobile client unloaded from the memory.
                 if (getContext() != null && mRemoteControlData.isFinishOnDisconnectEnabled()) {
                     // NOTE: It's not a good idea to remember connection state (mConnected) at this point.
-                    MessageHelpers.showLongMessage(getContext(), getContext().getString(R.string.device_disconnected, command.getDeviceName()));
+                    RayNeoMessages.showLongMessage(getContext(), getContext().getString(R.string.device_disconnected, command.getDeviceName()));
                     Utils.properlyFinishTheApp(getContext());
                 }
                 //if (mRemoteControlData.isConnectMessagesEnabled()) {
-                //    MessageHelpers.showLongMessage(getContext(), getContext().getString(R.string.device_disconnected, command.getDeviceName()));
+                //    RayNeoMessages.showLongMessage(getContext(), getContext().getString(R.string.device_disconnected, command.getDeviceName()));
                 //}
                 unregisterVolumeObserver();
                 mRemoteControlData.setConnectedBefore(false);

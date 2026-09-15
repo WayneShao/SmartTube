@@ -88,4 +88,38 @@ public class RayNeoWindowTest {
         assertTrue(dialog.isShowing());
         event.recycle(); dialog.dismiss();
     }
+
+    @Test public void loadingOverlayRootIsInsideStereoRatherThanDecor() {
+        activity.setContentView(new FrameLayout(activity));
+        RayNeoWindow.install(activity);
+        assertSame(content(activity.getWindow()), RayNeoWindow.overlayRoot(activity));
+        View indicator = new View(activity);
+        RayNeoWindow.overlayRoot(activity).addView(indicator,
+                new FrameLayout.LayoutParams(40, 40, android.view.Gravity.CENTER));
+        measure(content(activity.getWindow()));
+        assertEquals(300, indicator.getLeft());
+        assertEquals(220, indicator.getTop());
+        RayNeoWindow.overlayRoot(activity).removeView(indicator);
+        assertNull(indicator.getParent());
+    }
+
+    @Test public void applicationContextNoticeUsesFocusedStereoWindow() {
+        org.robolectric.android.controller.ActivityController<Activity> controller =
+                Robolectric.buildActivity(Activity.class).setup().visible().windowFocusChanged(true);
+        Activity owner = controller.get();
+        shadowOf(owner.getWindowManager().getDefaultDisplay()).setRealWidth(1280);
+        shadowOf(owner.getWindowManager().getDefaultDisplay()).setRealHeight(480);
+        owner.setContentView(new View(owner));
+        RayNeoWindow.install(owner);
+        owner.getWindow().getCallback().onWindowFocusChanged(true);
+        StereoLayout root = content(owner.getWindow());
+        measure(root);
+        RayNeoMessages.showMessage(owner.getApplicationContext(), "network notice");
+        assertEquals(2, root.getChildCount());
+        android.widget.TextView notice = (android.widget.TextView) root.getChildAt(1);
+        assertEquals("network notice", notice.getText().toString());
+        RayNeoMessages.cancelToasts();
+        assertEquals(View.GONE, notice.getVisibility());
+        controller.pause().stop().destroy();
+    }
 }
