@@ -63,8 +63,8 @@ android {
         versionCode 2437
         versionName "32.47"
         if (rayNeoBuild) {
-            versionNameSuffix "-rayneo.2"
-            versionCode 2438
+            versionNameSuffix "-rayneo.3"
+            versionCode 2439
         }
         manifestPlaceholders = [rayneoApp: rayNeoBuild ? "true" : "false",
                                 appLabel: rayNeoBuild ? "SmartTube RayNeo" : "@string/app_name"]

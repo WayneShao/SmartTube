@@ -29,3 +29,9 @@ controls integration. Do not change system display/direction settings.
 
 Physical temple event delivery and full video/optical acceptance remain distinct
 from host widget tests and ADB-injected direction-key checks.
+
+## v3 correction
+
+The user confirmed basic physical four-direction navigation. Sidebar traversal now
+accepts Leanback's nonfocusable fragment container, and exit confirmation is rendered
+inside the stereo window. See VALIDATION-v3.md for host and device evidence.

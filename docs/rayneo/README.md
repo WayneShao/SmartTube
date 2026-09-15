@@ -2,7 +2,7 @@
 
 Based on SmartTube 32.47 (`249bc833f`). Branch: `rayneo/x3pro`.
 Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
-version `32.47-rayneo.2`. This package can coexist with official SmartTube.
+version `32.47-rayneo.3`. This package can coexist with official SmartTube.
 
 ## Display and input
 
@@ -20,6 +20,10 @@ on new frames. Tunneling is disabled on this path.
 - Single tap confirms the focused control after the double-tap interval.
 - Double tap returns within the active window without a preceding confirmation.
 - Long press delegates MENU to the current focused item.
+- Sidebar-to-content navigation accepts Leanback fragment containers and preserves
+  their normal descendant-focus/header-transition behavior.
+- The exit confirmation is a nonfocusable, two-second message inside the stereo
+  content tree; it appears in both eyes and resets its timer when repeated.
 - A window-local navigator restores focus and ListView selection after touch mode
   clears them, and supplies focus traversal when direct key dispatch is unhandled.
 - Pending confirmation is bound to the original focus, selected row and adapter.
@@ -62,7 +66,7 @@ keyPassword=YOUR_LOCAL_PASSWORD
 
 `storeFile` is resolved relative to `smarttubetv/`. Keystores, properties, APKs and
 local artifacts are ignored by Git. Keep the signing material for future updates.
-Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v2/`.
+Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v3/`.
 
 ## Verification boundary
 

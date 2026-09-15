@@ -16,6 +16,39 @@ import static org.junit.Assert.*;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 29, manifest = Config.NONE)
 public class FocusNavigatorTest {
+    @Test public void rightFromSidebarCanEnterNonFocusableContentContainer() {
+        Activity activity = Robolectric.buildActivity(Activity.class).setup().get();
+        StereoLayout root = new StereoLayout(activity);
+        FrameLayout content = new FrameLayout(activity);
+        content.setFocusable(false);
+        content.setDescendantFocusability(android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        Button card = new Button(activity);
+        content.addView(card, new FrameLayout.LayoutParams(180, 100));
+        Button header = new Button(activity) {
+            @Override public View focusSearch(int direction) {
+                // BrowseSupportFragment returns mMainFragment.getView(), not a leaf control.
+                return direction == View.FOCUS_RIGHT ? content : super.focusSearch(direction);
+            }
+        };
+        FrameLayout panel = new FrameLayout(activity);
+        panel.addView(header, new FrameLayout.LayoutParams(180, 100));
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(350, 400);
+        params.leftMargin = 250;
+        panel.addView(content, params);
+        root.addView(panel);
+        activity.setContentView(root);
+        root.measure(View.MeasureSpec.makeMeasureSpec(1280, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(480, View.MeasureSpec.EXACTLY));
+        root.layout(0, 0, 1280, 480);
+        header.requestFocusFromTouch();
+        assertFalse(content.isFocusable());
+        assertTrue(content.hasFocusable());
+        FocusNavigator navigation = new FocusNavigator(root, activity::dispatchKeyEvent);
+        navigation.send(KeyEvent.KEYCODE_DPAD_RIGHT);
+        assertSame(card, root.findFocus());
+        navigation.close();
+    }
+
     @Test public void fourSwipesMoveActualSelectedControlAndConfirmClicksSelection() {
         Activity activity = Robolectric.buildActivity(Activity.class).setup().get();
         StereoLayout root = new StereoLayout(activity);

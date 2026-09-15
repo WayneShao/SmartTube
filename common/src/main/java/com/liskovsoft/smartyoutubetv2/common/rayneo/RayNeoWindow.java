@@ -2,6 +2,8 @@ package com.liskovsoft.smartyoutubetv2.common.rayneo;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.Gravity;
@@ -33,6 +35,23 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
 
     public static void install(Activity activity) {
         if (RayNeo.isEnabled(activity)) install(activity.getWindow(), false);
+    }
+
+    /** Returns false when the caller should retain its normal system message path. */
+    public static boolean showMessage(Context context, int messageResId) {
+        Context owner = context;
+        while (owner instanceof ContextWrapper && !(owner instanceof Activity)) {
+            Context base = ((ContextWrapper) owner).getBaseContext();
+            if (base == owner) break;
+            owner = base;
+        }
+        if (!(owner instanceof Activity)) return false;
+        Window.Callback callback = ((Activity) owner).getWindow().getCallback();
+        if (!(callback instanceof RayNeoWindow)) return false;
+        RayNeoWindow stereo = (RayNeoWindow) callback;
+        if (!stereo.active()) return false;
+        stereo.root.showMessage(context.getText(messageResId));
+        return true;
     }
 
     public static void install(Dialog dialog) {
@@ -119,7 +138,11 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
     }
 
     @Override public void onWindowFocusChanged(boolean focused) {
-        if (!focused) { input.cancel(); clearTarget(); if (navigator != null) navigator.cancel(); }
+        if (!focused) {
+            input.cancel(); clearTarget();
+            if (navigator != null) navigator.cancel();
+            if (root != null) root.dismissMessage();
+        }
         else if (navigator != null) navigator.prepare();
         super.onWindowFocusChanged(focused);
     }

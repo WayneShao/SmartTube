@@ -28,8 +28,12 @@ final class FocusNavigator implements ViewTreeObserver.OnGlobalFocusChangeListen
     }
 
     private boolean usable(View view) {
+        return insideWindow(view) && view.isFocusable();
+    }
+
+    private boolean insideWindow(View view) {
         if (view == null || view == root || !view.isAttachedToWindow() || !view.isShown()
-                || !view.isEnabled() || !view.isFocusable()) return false;
+                || !view.isEnabled()) return false;
         for (View ancestor = view; ancestor != null;
              ancestor = ancestor.getParent() instanceof View ? (View) ancestor.getParent() : null) {
             if (ancestor == root) return true;
@@ -120,7 +124,9 @@ final class FocusNavigator implements ViewTreeObserver.OnGlobalFocusChangeListen
         // Local dispatch does not pass through ViewRootImpl's unhandled-key focus traversal.
         if (!handled && direction != 0 && before != null && root.findFocus() == before && usable(before)) {
             View next = before.focusSearch(direction);
-            if (usable(next) && next != before) next.requestFocus(direction);
+            // Leanback can return a non-focusable fragment container whose descendants own focus.
+            // Let its requestFocus() perform the normal child-focus/header transition callbacks.
+            if (insideWindow(next) && next != before && next.hasFocusable()) next.requestFocus(direction);
         }
         dispatch.key(new KeyEvent(time, time, KeyEvent.ACTION_UP, code, 0));
         remember(root.findFocus());

@@ -41,3 +41,9 @@ SHA-256: `bce06f193ff0a7f13b373012438901f1dd4d3893d63b8026f52d978074895cdf`
 Certificate SHA-256: `9b8d5d6835cf5601bf77fd982692accaf61e7f5986b755de49fb7783d9a0a507`
 
 The certificate is unchanged from v1. Local screenshots and APKs remain ignored by Git.
+
+## Subsequent user feedback
+
+The user confirmed physical four-direction temple navigation. They reported two
+remaining issues: RIGHT from the sidebar did not return to content, and the exit
+Toast was not stereo. These are addressed in v3; see VALIDATION-v3.md.
