@@ -1,6 +1,8 @@
 # First-version host validation — 2026-09-15
 
 Upstream source: `249bc833f` (SmartTube 32.47).
+Implementation commit: `4b68fa50b`.
+Tracking branch: [WayneShao/SmartTube — rayneo/x3pro](https://github.com/WayneShao/SmartTube/tree/rayneo/x3pro).
 Pinned submodules: SharedModules `620808aad13f31c4c07b6036bbd78f93558dafdf`,
 MediaServiceCore `7133502c576f47e226f726efec7abd6c242ce8ae`.
 

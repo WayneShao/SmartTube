@@ -36,7 +36,7 @@ layers and physical touchpad behavior require runtime validation.
 - [x] Build signed APK, run focused tests and check manifest/signature/hash.
 - [x] Record pending device smoke validation; user explicitly deferred all
   device testing. Do not install/start/probe devices during implementation.
-- [ ] Push the first implementation branch to the user's existing fork
+- [x] Push the first implementation branch to the user's existing fork
   WayneShao/SmartTube after host checks, as explicitly requested by user.
 
 ## Acceptance
