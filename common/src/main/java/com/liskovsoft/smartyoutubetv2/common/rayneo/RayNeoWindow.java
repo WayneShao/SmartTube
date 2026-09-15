@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.SystemClock;
 import android.view.Gravity;
-import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,14 +19,15 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
     private final Window window;
     private final TempleInput input;
     private StereoLayout root;
-    private CursorTarget target;
+    private FocusTarget target;
+    private FocusNavigator navigator;
 
     private RayNeoWindow(Window window) {
         super(window.getCallback());
         this.window = window;
-        input = new TempleInput(window.getContext(), this::action, this::move, () -> {
+        input = new TempleInput(window.getContext(), this::action, () -> {
             clearTarget();
-            if (active()) target = new CursorTarget(root);
+            if (active() && navigator.prepare() != null) target = new FocusTarget(root);
         });
     }
 
@@ -63,6 +62,7 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
                 ? (RayNeoWindow) window.getCallback() : new RayNeoWindow(window);
         callback.input.cancel();
         callback.clearTarget();
+        if (callback.navigator != null) callback.navigator.close();
         StereoLayout stereo = new StereoLayout(window.getContext());
         FrameLayout logical = new FrameLayout(window.getContext());
         while (content.getChildCount() != 0) {
@@ -92,12 +92,16 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        stereo.showCursor(window.getDecorView().hasWindowFocus());
+        callback.navigator = new FocusNavigator(stereo, callback::dispatchNavigationKey);
         stereo.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-            @Override public void onViewAttachedToWindow(View view) {}
+            @Override public void onViewAttachedToWindow(View view) {
+                callback.navigator.close();
+                callback.navigator = new FocusNavigator(stereo, callback::dispatchNavigationKey);
+            }
             @Override public void onViewDetachedFromWindow(View view) {
                 callback.input.cancel();
                 callback.clearTarget();
+                callback.navigator.close();
             }
         });
     }
@@ -115,63 +119,21 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
     }
 
     @Override public void onWindowFocusChanged(boolean focused) {
-        if (!focused) { input.cancel(); clearTarget(); }
-        if (root != null) root.showCursor(focused);
+        if (!focused) { input.cancel(); clearTarget(); if (navigator != null) navigator.cancel(); }
+        else if (navigator != null) navigator.prepare();
         super.onWindowFocusChanged(focused);
     }
 
-    private void move(float dx, float dy) {
-        if (!active()) return;
-        CursorScroll.move(root, dx, dy);
-        root.showCursor(true);
-        MotionEvent hover = pointer(MotionEvent.ACTION_HOVER_MOVE, SystemClock.uptimeMillis(), root.cursor().x(), root.cursor().y());
-        hover.setSource(InputDevice.SOURCE_MOUSE);
-        try { super.dispatchGenericMotionEvent(hover); }
-        finally { hover.recycle(); }
-    }
-
-    private MotionEvent pointer(int action, long downTime, float x, float y) {
-        int[] rootLocation = new int[2];
-        int[] decorLocation = new int[2];
-        root.getLocationInWindow(rootLocation);
-        window.getDecorView().getLocationInWindow(decorLocation);
-        MotionEvent event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action,
-                x + rootLocation[0] - decorLocation[0],
-                y + rootLocation[1] - decorLocation[1], 0);
-        event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
-        return event;
+    private boolean dispatchNavigationKey(KeyEvent event) {
+        return super.dispatchKeyEvent(event);
     }
 
     private void action(int keyCode) {
         if (!active()) return;
-        if (keyCode != KeyEvent.KEYCODE_BACK && (target == null || !target.valid(root))) {
-            clearTarget();
-            return;
-        }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-            StereoLayout owner = root;
-            long time = SystemClock.uptimeMillis();
-            MotionEvent down = pointer(MotionEvent.ACTION_DOWN, time, target.x, target.y);
-            MotionEvent up = pointer(MotionEvent.ACTION_UP, time, target.x, target.y);
-            clearTarget();
-            try {
-                super.dispatchTouchEvent(down);
-                if (root == owner && active()) super.dispatchTouchEvent(up);
-                else {
-                    up.setAction(MotionEvent.ACTION_CANCEL);
-                    super.dispatchTouchEvent(up);
-                }
-            } finally { down.recycle(); up.recycle(); }
-        } else if (keyCode == KeyEvent.KEYCODE_MENU && target.longClick()) {
-            clearTarget();
-        } else {
-            if (keyCode == KeyEvent.KEYCODE_MENU && !target.focus()) { clearTarget(); return; }
-            clearTarget();
-            long time = SystemClock.uptimeMillis();
-            // Delegate to this Window's original Activity/Dialog, including its translators.
-            super.dispatchKeyEvent(new KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0));
-            super.dispatchKeyEvent(new KeyEvent(time, time, KeyEvent.ACTION_UP, keyCode, 0));
-        }
+        boolean confirm = keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_MENU;
+        if (confirm && (target == null || !target.valid(root))) { clearTarget(); return; }
+        clearTarget();
+        navigator.send(keyCode);
     }
 
     private void clearTarget() {

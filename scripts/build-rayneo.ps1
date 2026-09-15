@@ -31,10 +31,13 @@ try {
     & ./gradlew.bat @tasks '-Prayneo' '--console=plain'
     if ($LASTEXITCODE -ne 0) { throw 'Gradle build or tests failed.' }
     $buildType = if ($DebugApk) { 'debug' } else { 'release' }
-    $apks = @(Get-ChildItem "smarttubetv/build/outputs/apk/stfdroid/$buildType/*arm64-v8a.apk")
+    $metadata = Get-Content "smarttubetv/build/outputs/apk/stfdroid/$buildType/output-metadata.json" -Raw | ConvertFrom-Json
+    $arm64 = @($metadata.elements | Where-Object { $_.filters.value -contains 'arm64-v8a' })
+    if ($arm64.Count -ne 1) { throw 'Expected exactly one arm64 output in build metadata.' }
+    $apks = @(Get-Item (Join-Path "smarttubetv/build/outputs/apk/stfdroid/$buildType" $arm64[0].outputFile))
     if ($apks.Count -ne 1) { throw 'Expected exactly one arm64 APK.' }
     $apk = $apks[0]
-    $output = New-Item -ItemType Directory -Force 'releases/rayneo-v1'
+    $output = New-Item -ItemType Directory -Force 'releases/rayneo-v2'
     Copy-Item $apk.FullName $output.FullName -Force
     Get-FileHash (Join-Path $output.FullName $apk.Name) -Algorithm SHA256
 } finally { Pop-Location }

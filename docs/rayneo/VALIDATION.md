@@ -1,3 +1,5 @@
+> Historical v1 record. Its free-pointer input design was rejected and replaced; see [v2 validation](VALIDATION-v2.md).
+
 # First-version host validation — 2026-09-15
 
 Upstream source: `249bc833f` (SmartTube 32.47).

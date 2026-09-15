@@ -2,17 +2,12 @@ package com.liskovsoft.smartyoutubetv2.common.rayneo;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
 /** One measured content tree, replayed in two clipped eye regions. */
 public final class StereoLayout extends FrameLayout {
-    private final CursorState cursor = new CursorState();
-    private final Paint cursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private boolean cursorVisible;
     private float gestureEyeOffset;
 
     public StereoLayout(Context context) {
@@ -21,18 +16,10 @@ public final class StereoLayout extends FrameLayout {
         setClipToPadding(true);
     }
 
-    public CursorState cursor() { return cursor; }
-
-    public void showCursor(boolean visible) {
-        cursorVisible = visible;
-        invalidate();
-    }
-
     @Override protected void onMeasure(int widthSpec, int heightSpec) {
         int width = MeasureSpec.getSize(widthSpec);
         super.onMeasure(MeasureSpec.makeMeasureSpec(width / 2, MeasureSpec.EXACTLY), heightSpec);
         setMeasuredDimension(width, getMeasuredHeight());
-        cursor.resize(width / 2, getMeasuredHeight());
     }
 
     @Override protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
@@ -47,12 +34,6 @@ public final class StereoLayout extends FrameLayout {
             canvas.translate(eye * eyeWidth, 0);
             canvas.clipRect(0, 0, eyeWidth, getHeight());
             super.dispatchDraw(canvas);
-            if (cursorVisible) {
-                cursorPaint.setColor(Color.BLACK);
-                canvas.drawCircle(cursor.x(), cursor.y(), 6, cursorPaint);
-                cursorPaint.setColor(Color.WHITE);
-                canvas.drawCircle(cursor.x(), cursor.y(), 4, cursorPaint);
-            }
             canvas.restoreToCount(save);
         }
     }

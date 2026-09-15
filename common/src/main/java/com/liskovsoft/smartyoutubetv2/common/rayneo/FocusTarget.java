@@ -1,7 +1,6 @@
 package com.liskovsoft.smartyoutubetv2.common.rayneo;
 
 import android.database.DataSetObserver;
-import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -10,10 +9,9 @@ import android.widget.AdapterView;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
-/** A delayed pointer action must still address the same content at the same coordinates. */
-final class CursorTarget {
+/** A delayed confirm belongs to the original focused content and adapter. */
+final class FocusTarget {
     final StereoLayout owner;
-    final float x, y;
     final View view;
     private final Object tag;
     private final String text;
@@ -21,6 +19,8 @@ final class CursorTarget {
     private RecyclerView.Adapter recyclerAdapter;
     private AdapterView<?> list;
     private Adapter listAdapter;
+    private int listPosition;
+    private long listId;
     private boolean changed;
     private final RecyclerView.AdapterDataObserver recyclerObserver = new RecyclerView.AdapterDataObserver() {
         @Override public void onChanged() { changed = true; }
@@ -35,11 +35,9 @@ final class CursorTarget {
         @Override public void onInvalidated() { changed = true; }
     };
 
-    CursorTarget(StereoLayout root) {
+    FocusTarget(StereoLayout root) {
         owner = root;
-        x = root.cursor().x();
-        y = root.cursor().y();
-        view = hit(root, x, y);
+        view = root.findFocus();
         tag = view == null ? null : view.getTag();
         text = view instanceof TextView ? ((TextView) view).getText().toString() : null;
         for (View candidate = view; candidate != null; candidate = parent(candidate)) {
@@ -52,6 +50,8 @@ final class CursorTarget {
             if (candidate instanceof AdapterView) {
                 list = (AdapterView<?>) candidate;
                 listAdapter = list.getAdapter();
+                listPosition = list.getSelectedItemPosition();
+                listId = list.getSelectedItemId();
                 if (listAdapter != null) listAdapter.registerDataSetObserver(listObserver);
                 break;
             }
@@ -59,11 +59,12 @@ final class CursorTarget {
     }
 
     boolean valid(StereoLayout current) {
-        return !changed && owner == current && view != null && hit(owner, x, y) == view
+        return !changed && owner == current && view != null && owner.findFocus() == view && belongsToOwner(view)
                 && view.getTag() == tag
                 && (text == null || text.contentEquals(((TextView) view).getText()))
                 && (recycler == null || recycler.getAdapter() == recyclerAdapter)
-                && (list == null || list.getAdapter() == listAdapter);
+                && (list == null || (list.getAdapter() == listAdapter
+                    && list.getSelectedItemPosition() == listPosition && list.getSelectedItemId() == listId));
     }
 
     void close() {
@@ -74,16 +75,10 @@ final class CursorTarget {
         changed = true;
     }
 
-    boolean longClick() {
-        for (View candidate = view; candidate != null && candidate != owner; candidate = parent(candidate)) {
-            if (candidate.isLongClickable() && candidate.performLongClick()) return true;
-        }
-        return false;
-    }
-
-    boolean focus() {
-        for (View candidate = view; candidate != null && candidate != owner; candidate = parent(candidate)) {
-            if (candidate.isFocusable() && candidate.requestFocus()) return true;
+    private boolean belongsToOwner(View view) {
+        if (!view.isShown() || !view.isEnabled()) return false;
+        for (View ancestor = view; ancestor != null; ancestor = parent(ancestor)) {
+            if (ancestor == owner) return true;
         }
         return false;
     }
@@ -91,24 +86,5 @@ final class CursorTarget {
     private static View parent(View view) {
         ViewParent parent = view.getParent();
         return parent instanceof View ? (View) parent : null;
-    }
-
-    static View hit(View root, float x, float y) {
-        if (root.getVisibility() != View.VISIBLE || x < 0 || y < 0 || x >= root.getWidth() || y >= root.getHeight()) return null;
-        if (root instanceof ViewGroup) {
-            ViewGroup group = (ViewGroup) root;
-            for (int i = group.getChildCount() - 1; i >= 0; i--) {
-                View child = group.getChildAt(i);
-                float[] point = {x + root.getScrollX() - child.getLeft(), y + root.getScrollY() - child.getTop()};
-                if (!child.getMatrix().isIdentity()) {
-                    android.graphics.Matrix inverse = new android.graphics.Matrix();
-                    if (!child.getMatrix().invert(inverse)) continue;
-                    inverse.mapPoints(point);
-                }
-                View result = hit(child, point[0], point[1]);
-                if (result != null) return result;
-            }
-        }
-        return root;
     }
 }

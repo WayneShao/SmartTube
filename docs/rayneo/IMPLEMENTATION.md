@@ -1,48 +1,31 @@
-# SmartTube RayNeo X3 Pro implementation
+# SmartTube RayNeo implementation
 
-User approved implementation on 2026-09-15. Baseline: 249bc833f, SmartTube 32.47.
+Baseline: 249bc833f, SmartTube 32.47. Branch: rayneo/x3pro.
 
-## Design
+## Required interaction
 
-Use the existing single-player TextureView path on RayNeo X3 Pro (ARGF20 /
-MercuryLiteXR, API 32, physical 1280x480). Keep one business View tree measured
-to 640x480, drawn into both eye regions. Derive eye width from the actual
-window; adapt SmartTube's existing density calculation to the eye width.
-No CPU bitmap video copying or second player. Independently wrap application
-dialogs using public Window/content APIs. Keep existing DPAD/business actions;
-scope temple gesture handling to identified touchpads and the current window.
-User clarified that cursor mode is mandatory: both eyes display the same visible
-cursor, touchpad X/Y deltas move it, confirmed single tap clicks at its location,
-double tap returns within the active window, long press opens the existing menu.
-Keep hardware DPAD navigation intact. Cancel pending clicks on focus loss/detach.
+Cursor mode means the selected control/focus highlight. A temple swipe moves the
+selected item left, right, up or down; a single tap confirms it, a double tap goes
+back, and a long press opens its menu. Activity pages and independent dialogs use
+one per-window content and input owner. Both eyes show the same selected item.
+The first version's free-pointer interpretation was rejected and removed in v2.
 
-Normal devices retain upstream behavior. System-owned IME/permission windows
-are outside the application content wrapper. Full composition through hardware
-layers and physical touchpad behavior require runtime validation.
+## Display
 
-## Implementation plan
+Keep the single content tree measured to 640x480, drawn across the 1280x480 X3 Pro
+window. Preserve the TextureView video path, Surface ownership repair and subtitle/
+controls integration. Do not change system display/direction settings.
 
-- [x] Preserve baseline on a dedicated branch; initialize pinned submodules.
-- [x] Build upstream stfdroid debug with JDK 17 and local SDK (BUILD SUCCESSFUL).
-- [x] Add behavioral tests for half-width layout, identical eye drawing,
-  right-eye coordinate mapping without event mutation, and window ownership.
-- [x] Add common RayNeo device/window/layout helpers; hook MotherActivity
-  content installation, density, fullscreen, and disable edge-slide conflicts.
-- [x] Use TextureView in SurfacePlaybackFragment on supported hardware;
-  verify frame invalidation and stable Surface holder lifetime.
-- [x] Adapt independently created AlertDialogs and preserve cancel/dismiss.
-- [x] Add temple cursor movement, edge scrolling and existing back/menu dispatch; cancel pending
-  actions on window focus loss/detach and preserve mouse/controller input.
-- [x] Build signed APK, run focused tests and check manifest/signature/hash.
-- [x] Record pending device smoke validation; user explicitly deferred all
-  device testing. Do not install/start/probe devices during implementation.
-- [x] Push the first implementation branch to the user's existing fork
-  WayneShao/SmartTube after host checks, as explicitly requested by user.
+## v2 verification
 
-## Acceptance
+- [x] Remove free-pointer drawing, coordinate-click injection and edge mouse scrolling.
+- [x] Map completed touch/hover swipes to one directional navigation action.
+- [x] Restore per-window focus and missing ListView selection.
+- [x] Supply unhandled-key focus traversal for direct Window callback dispatch.
+- [x] Bind delayed confirmation to original focus, row and adapter.
+- [x] Test real selected controls through a four-direction swipe cycle and confirm.
+- [x] Test list recovery, row/adapter changes and cancellation before layout.
+- [x] Complete final signed build, deploy/start, and push the input correction.
 
-Homepage, settings, search, player, subtitles/control overlays, and editable
-dialogs must display complete content in both eyes. Check pause/resume,
-seek, background/return, dialog close, and surface recreation. Screen captures
-can prove logical composition, not optical synchronization or wearing comfort.
-No performance improvement claim without comparable baseline/candidate media.
+Physical temple event delivery and full video/optical acceptance remain distinct
+from host widget tests and ADB-injected direction-key checks.

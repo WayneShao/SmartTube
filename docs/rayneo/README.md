@@ -2,7 +2,7 @@
 
 Based on SmartTube 32.47 (`249bc833f`). Branch: `rayneo/x3pro`.
 Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
-version `32.47-rayneo.1`. This package can coexist with official SmartTube.
+version `32.47-rayneo.2`. This package can coexist with official SmartTube.
 
 ## Display and input
 
@@ -13,16 +13,18 @@ subtitles, playback controls, and app UI share the content tree. TextureView
 surface lifetime uses one owned Surface/holder and invalidates the stereo parent
 on new frames. Tunneling is disabled on this path.
 
-- The same visible cursor appears in both eyes of the active application window.
-- Slide either identified touchpad in X/Y to move the cursor in X/Y. Delivered
-  coordinate signs are preserved; the app does not toggle system direction settings.
-- Keep sliding outwards at an eye edge to scroll the nearest eligible list.
-- Single tap clicks the captured cursor target after the double-tap interval.
-- Double tap returns within the active window without issuing a preceding click.
-- Long press invokes the cursor target's long-click action, or focuses that target
-  before delegating MENU. Mouse and controller input keep their normal routes.
-- Pending clicks are cancelled on focus loss/detach, target replacement, or
-  observed adapter data changes. Each window owns its cursor and gesture state.
+- Cursor mode follows the app's selected item/focus highlight, drawn in both eyes.
+- Each completed X/Y touchpad swipe moves selection left/right/up/down using the
+  dominant delivered coordinate delta. System direction signs are preserved.
+- The existing list/grid focus system scrolls off-screen items into view.
+- Single tap confirms the focused control after the double-tap interval.
+- Double tap returns within the active window without a preceding confirmation.
+- Long press delegates MENU to the current focused item.
+- A window-local navigator restores focus and ListView selection after touch mode
+  clears them, and supplies focus traversal when direct key dispatch is unhandled.
+- Pending confirmation is bound to the original focus, selected row and adapter.
+  Focus/content/adapter changes, focus loss and detach invalidate pending input.
+
 
 ## Window coverage
 
@@ -60,13 +62,13 @@ keyPassword=YOUR_LOCAL_PASSWORD
 
 `storeFile` is resolved relative to `smarttubetv/`. Keystores, properties, APKs and
 local artifacts are ignored by Git. Keep the signing material for future updates.
-Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v1/`.
+Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v2/`.
 
 ## Verification boundary
 
-The user explicitly deferred device testing for this first version. Host tests
+Version 1 was built without device testing and then installed on request. Version 2 corrects the input semantics to focused-item navigation. Host tests
 exercise ordinary View double rendering, logical sizing, pointer mapping, cursor
-movement, delayed click cancellation, target identity and scrolling. These tests
+direction mapping, actual selected-control movement, ListView recovery and delayed confirmation cancellation. These tests
 do not prove TextureView hardware replay, firmware event delivery, optical
 synchronization, actual online playback or comfort/performance on the glasses.
 

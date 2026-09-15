@@ -20,9 +20,8 @@ import static org.robolectric.Shadows.shadowOf;
 @LooperMode(LooperMode.Mode.PAUSED)
 public class TempleInputTest {
     private final List<Integer> keys = new ArrayList<>();
-    private final List<Float> moves = new ArrayList<>();
     private final TempleInput input = new TempleInput(RuntimeEnvironment.getApplication(), keys::add,
-            (dx, dy) -> { moves.add(dx); moves.add(dy); });
+            () -> {});
 
     private void event(long down, long time, int action, float x, float y) {
         MotionEvent event = MotionEvent.obtain(down, time, action, x, y, 0);
@@ -60,8 +59,7 @@ public class TempleInputTest {
         event(1, 90, MotionEvent.ACTION_MOVE, 100, 100);
         event(1, 110, MotionEvent.ACTION_UP, 100, 100);
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500));
-        assertTrue(keys.isEmpty());
-        assertEquals(java.util.Arrays.asList(-100f, 0f), moves);
+        assertEquals(java.util.Collections.singletonList(KeyEvent.KEYCODE_DPAD_LEFT), keys);
     }
 
     @Test public void longPressOpensMenuWithoutConfirming() {
@@ -79,13 +77,26 @@ public class TempleInputTest {
         assertTrue(keys.isEmpty());
     }
 
-    @Test public void hoverMotionTracksBothAxesWithoutClick() {
+    @Test public void hoverSessionMovesSelectionOnExitWithoutMouseMotion() {
         event(0, 1, MotionEvent.ACTION_HOVER_MOVE, 100, 100);
         event(0, 2, MotionEvent.ACTION_HOVER_MOVE, 120, 80);
-        assertEquals(java.util.Arrays.asList(20f, -20f), moves);
         assertTrue(keys.isEmpty());
+        event(0, 3, MotionEvent.ACTION_HOVER_EXIT, 0, 0);
+        assertEquals(java.util.Collections.singletonList(KeyEvent.KEYCODE_DPAD_RIGHT), keys);
         input.cancel();
         event(0, 3, MotionEvent.ACTION_HOVER_MOVE, 300, 300);
-        assertEquals(2, moves.size());
+    }
+
+    @Test public void fourDirectionsMoveSelectionOncePerSwipe() {
+        float[][] ends = {{100, 200}, {300, 200}, {200, 100}, {200, 300}};
+        for (int i = 0; i < ends.length; i++) {
+            long start = 1000 + i * 1000;
+            event(start, start, MotionEvent.ACTION_DOWN, 200, 200);
+            event(start, start + 50, MotionEvent.ACTION_MOVE, ends[i][0], ends[i][1]);
+            assertEquals(i, keys.size());
+            event(start, start + 90, MotionEvent.ACTION_UP, ends[i][0], ends[i][1]);
+        }
+        assertEquals(java.util.Arrays.asList(KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN), keys);
     }
 }

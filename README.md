@@ -1,4 +1,4 @@
-> **RayNeo X3 Pro port:** This branch adds stereo application UI/video integration and a tracked two-dimensional cursor. See [port/build instructions](docs/rayneo/README.md) and [first-version validation](docs/rayneo/VALIDATION.md). Device testing is pending.
+> **RayNeo X3 Pro port:** This branch adds stereo application UI/video integration and four-way focused-item navigation. See [port/build instructions](docs/rayneo/README.md) and [focus-navigation validation](docs/rayneo/VALIDATION-v2.md). See the validation notes for the current device-test boundary.
 
 [<img src="images/badge_fdroid.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/app.smarttube.fdroid/)
 [<img src="images/badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/yuliskov/SmartTube/releases)
