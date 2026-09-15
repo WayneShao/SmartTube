@@ -979,6 +979,7 @@ public class AppDialogUtil {
         }
 
         new MaterialFilePicker()
+                .withCustomActivity(com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoFilePickerActivity.class)
                 .withActivity(activity)
                 .withTitle(title)
                 .withRootPath(filesDir.getAbsolutePath())

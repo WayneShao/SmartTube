@@ -24,6 +24,9 @@ buildscript {
 
 apply plugin: 'com.android.application'
 
+// Dedicated, side-by-side RayNeo build; upstream flavors remain unchanged without -Prayneo.
+def rayNeoBuild = project.hasProperty('rayneo')
+
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
@@ -59,6 +62,9 @@ android {
         targetSdkVersion project.properties.targetSdkVersion
         versionCode 2437
         versionName "32.47"
+        if (rayNeoBuild) versionNameSuffix "-rayneo.1"
+        manifestPlaceholders = [rayneoApp: rayNeoBuild ? "true" : "false",
+                                appLabel: rayNeoBuild ? "SmartTube RayNeo" : "@string/app_name"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
 
@@ -168,7 +174,7 @@ android {
             targetSdkVersion project.properties.compileSdkVersion
         }
         stfdroid {
-            applicationId "app.smarttube.fdroid"
+            applicationId rayNeoBuild ? "app.smarttube.rayneo" : "app.smarttube.fdroid"
             minSdkVersion 21
             targetSdkVersion project.properties.compileSdkVersion
         }
@@ -212,7 +218,7 @@ dependencies {
     //////// END EXOPLAYER //////////
 
     testImplementation 'junit:junit:' + junitVersion
-    testImplementation 'org.robolectric:robolectric:' + robolectricVersion
+    testImplementation 'org.robolectric:robolectric:4.12.2'
     androidTestImplementation 'androidx.test.ext:junit:' + testXSupportVersion
     androidTestImplementation 'androidx.test.ext:truth:' + testXSupportVersion
     androidTestImplementation 'androidx.test:runner:' + testXSupportVersion

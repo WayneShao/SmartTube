@@ -82,6 +82,7 @@ public class SimpleEditDialog {
 
         try {
             configDialog.show();
+            com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoWindow.install(configDialog);
         } catch (RuntimeException e) {
             // BadTokenException: Unable to add window -- token null is not for an application
             // RuntimeException: InputChannel is not initialized

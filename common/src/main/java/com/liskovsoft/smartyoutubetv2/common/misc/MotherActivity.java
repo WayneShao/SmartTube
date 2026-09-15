@@ -21,6 +21,8 @@ import com.liskovsoft.sharedutils.locale.LocaleContextWrapper;
 import com.liskovsoft.sharedutils.locale.LocaleUpdater;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.smartyoutubetv2.common.R;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeo;
+import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoWindow;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.ViewManager;
 import com.liskovsoft.smartyoutubetv2.common.prefs.GeneralData;
@@ -51,6 +53,17 @@ public class MotherActivity extends FragmentActivity {
     private boolean mEnableThrottleKeyDown;
     private boolean mIsOculusQuestFixEnabled;
     private boolean mIsFullscreenModeEnabled;
+    private boolean mInstallingStereo;
+
+    @Override
+    public void onContentChanged() {
+        super.onContentChanged();
+        if (!mInstallingStereo && RayNeo.isEnabled(this)) {
+            mInstallingStereo = true;
+            try { RayNeoWindow.install(this); }
+            finally { mInstallingStereo = false; }
+        }
+    }
 
     public interface OnPermissions {
         void onPermissions(int requestCode, String[] permissions, int[] grantResults);
@@ -73,7 +86,7 @@ public class MotherActivity extends FragmentActivity {
         Log.d(TAG, "Starting %s...", this.getClass().getSimpleName());
 
         mIsOculusQuestFixEnabled = PlayerTweaksData.instance(this).isOculusQuestFixEnabled();
-        mIsFullscreenModeEnabled = GeneralData.instance(this).isFullscreenModeEnabled();
+        mIsFullscreenModeEnabled = RayNeo.isEnabled(this) || GeneralData.instance(this).isFullscreenModeEnabled();
 
         initDpi();
         initTheme();
@@ -255,17 +268,23 @@ public class MotherActivity extends FragmentActivity {
     private DisplayMetrics getDisplayMetrics(Context context) {
         // BUG: adapt to resolution change (e.g. on AFR)
         // Don't disable caching or you will experience weird sizes on cards in video suggestions (e.g. after exit from PIP)!
-        if (sCachedDisplayMetrics == null) {
+        boolean rayNeo = RayNeo.isEnabled(context);
+        if (sCachedDisplayMetrics == null || rayNeo) {
             // NOTE: Don't replace with getResources().getDisplayMetrics(). Shows wrong metrics here!
             DisplayMetrics displayMetrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             float uiScale = MainUIData.instance(context).getUIScale();
             // Take into the account screen orientation (e.g. when running on phone)
             int widthPixels = Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels);
+            if (rayNeo) {
+                widthPixels /= 2;
+                displayMetrics.widthPixels = widthPixels;
+            }
             float widthRatio = DEFAULT_WIDTH / widthPixels;
             float density = DEFAULT_DENSITY / widthRatio * uiScale;
             displayMetrics.density = density;
             displayMetrics.scaledDensity = density;
+            if (rayNeo) displayMetrics.densityDpi = Math.round(density * DisplayMetrics.DENSITY_DEFAULT);
             sCachedDisplayMetrics = displayMetrics;
         }
 
@@ -418,7 +437,7 @@ public class MotherActivity extends FragmentActivity {
     }
 
     private void initEdgeSlide() {
-        if (VERSION.SDK_INT < 21 || !Helpers.isTouchSupported(this) || Utils.isSystemGestureArrowEnabled(this)) {
+        if (RayNeo.isEnabled(this) || VERSION.SDK_INT < 21 || !Helpers.isTouchSupported(this) || Utils.isSystemGestureArrowEnabled(this)) {
             return;
         }
 

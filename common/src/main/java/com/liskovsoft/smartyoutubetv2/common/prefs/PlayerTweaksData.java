@@ -111,8 +111,10 @@ public class PlayerTweaksData implements ProfileChangeListener {
     private boolean mIsSuggestionsHorizontallyScrolled;
     private boolean mIsQueueRespectsPlaybackMode;
     private final Runnable mPersistDataInt = this::persistDataInt;
+    private final Context mRayNeoContext;
 
     private PlayerTweaksData(Context context) {
+        mRayNeoContext = context.getApplicationContext();
         mPrefs = AppPrefs.instance(context);
         mPrefs.addListener(this);
         restoreData();
@@ -181,7 +183,7 @@ public class PlayerTweaksData implements ProfileChangeListener {
     }
 
     public boolean isTextureViewEnabled() {
-        return mIsTextureViewEnabled;
+        return com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeo.isEnabled(mRayNeoContext) || mIsTextureViewEnabled;
     }
 
     public void setTextureViewEnabled(boolean enable) {
@@ -256,7 +258,7 @@ public class PlayerTweaksData implements ProfileChangeListener {
     }
 
     public boolean isTunneledPlaybackEnabled() {
-        return mIsTunneledPlaybackEnabled;
+        return !com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeo.isEnabled(mRayNeoContext) && mIsTunneledPlaybackEnabled;
     }
 
     public void setTunneledPlaybackEnabled(boolean enable) {

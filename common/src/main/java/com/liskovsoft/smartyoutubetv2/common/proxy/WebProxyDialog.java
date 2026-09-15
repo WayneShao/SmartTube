@@ -195,6 +195,7 @@ public class WebProxyDialog {
 
         mNumTests = 0;
         mProxyConfigDialog.show();
+        com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoWindow.install(mProxyConfigDialog);
 
         mProxyConfigDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener((view) -> {
             ((TextView) mProxyConfigDialog.findViewById(R.id.proxy_config_message)).setText("");

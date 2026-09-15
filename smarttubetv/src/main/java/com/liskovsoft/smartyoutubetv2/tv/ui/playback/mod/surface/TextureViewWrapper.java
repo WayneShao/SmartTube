@@ -17,6 +17,8 @@ public class TextureViewWrapper implements SurfaceWrapper {
     private int mState = SURFACE_NOT_CREATED;
     private final TextureView mVideoSurface;
     private SurfaceHolder.Callback mMediaPlaybackCallback;
+    private TextureViewSurfaceHolder mHolder;
+    private int mSurfaceWidth, mSurfaceHeight;
 
     @SuppressLint("WrongConstant")
     public TextureViewWrapper(Context context, ViewGroup root) {
@@ -25,32 +27,42 @@ public class TextureViewWrapper implements SurfaceWrapper {
         mVideoSurface.setSurfaceTextureListener(new SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                if (mMediaPlaybackCallback != null) {
-                    mMediaPlaybackCallback.surfaceCreated(new TextureViewSurfaceHolder(new Surface(surface)));
-                }
+                mHolder = new TextureViewSurfaceHolder(new Surface(surface));
+                mSurfaceWidth = width;
+                mSurfaceHeight = height;
                 mState = SURFACE_CREATED;
+                if (mMediaPlaybackCallback != null) {
+                    mMediaPlaybackCallback.surfaceCreated(mHolder);
+                    mMediaPlaybackCallback.surfaceChanged(mHolder, android.graphics.PixelFormat.OPAQUE, width, height);
+                }
             }
 
             @Override
             public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-                if (mMediaPlaybackCallback != null) {
-                    mMediaPlaybackCallback.surfaceChanged(new TextureViewSurfaceHolder(new Surface(surface)), 4, width, height);
+                mSurfaceWidth = width;
+                mSurfaceHeight = height;
+                if (mMediaPlaybackCallback != null && mHolder != null) {
+                    mMediaPlaybackCallback.surfaceChanged(mHolder, android.graphics.PixelFormat.OPAQUE, width, height);
                 }
             }
 
             @Override
             public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-                if (mMediaPlaybackCallback != null) {
-                    mMediaPlaybackCallback.surfaceDestroyed(new TextureViewSurfaceHolder(new Surface(surface)));
-                }
                 mState = SURFACE_NOT_CREATED;
+                TextureViewSurfaceHolder holder = mHolder;
+                mHolder = null;
+                if (holder != null) {
+                    try {
+                        if (mMediaPlaybackCallback != null) mMediaPlaybackCallback.surfaceDestroyed(holder);
+                    } finally { holder.getSurface().release(); }
+                }
 
                 return true;
             }
 
             @Override
             public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
+                com.liskovsoft.smartyoutubetv2.common.rayneo.StereoLayout.invalidateAncestor(mVideoSurface);
             }
         });
     }
@@ -59,11 +71,17 @@ public class TextureViewWrapper implements SurfaceWrapper {
      * Adds {@link SurfaceHolder.Callback} to {@link SurfaceView}.
      */
     public void setSurfaceHolderCallback(SurfaceHolder.Callback callback) {
+        if (mMediaPlaybackCallback == callback) return;
+        if (mMediaPlaybackCallback != null && mHolder != null) {
+            mMediaPlaybackCallback.surfaceDestroyed(mHolder);
+        }
         mMediaPlaybackCallback = callback;
 
         if (callback != null) {
-            if (mState == SURFACE_CREATED) {
-                mMediaPlaybackCallback.surfaceCreated(new TextureViewSurfaceHolder(new Surface(mVideoSurface.getSurfaceTexture())));
+            if (mState == SURFACE_CREATED && mHolder != null) {
+                mMediaPlaybackCallback.surfaceCreated(mHolder);
+                mMediaPlaybackCallback.surfaceChanged(mHolder, android.graphics.PixelFormat.OPAQUE,
+                        mSurfaceWidth, mSurfaceHeight);
             }
         }
     }

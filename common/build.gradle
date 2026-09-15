@@ -55,8 +55,10 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'androidx.appcompat:appcompat:' + appCompatXVersion
+    implementation 'androidx.recyclerview:recyclerview:' + recyclerviewXVersion
     testImplementation 'junit:junit:' + junitVersion
-    testImplementation 'org.robolectric:robolectric:' + robolectricVersion
+    // Java 17-compatible host checks for the RayNeo port; no runtime dependency change.
+    testImplementation 'org.robolectric:robolectric:4.12.2'
 
     implementation project(':sharedutils')
     implementation project(':fragment-1.1.0')

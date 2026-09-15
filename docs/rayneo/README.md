@@ -1,0 +1,77 @@
+# SmartTube RayNeo X3 Pro — first port
+
+Based on SmartTube 32.47 (`249bc833f`). Branch: `rayneo/x3pro`.
+Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
+version `32.47-rayneo.1`. This package can coexist with official SmartTube.
+
+## Display and input
+
+The port activates only on RayNeo ARGF20 / MercuryLiteXR with a 1280x480 physical
+display. Application content is laid out in one 640x480 eye region and drawn in
+both eyes. A single decoder feeds the existing TextureView path; ordinary video,
+subtitles, playback controls, and app UI share the content tree. TextureView
+surface lifetime uses one owned Surface/holder and invalidates the stereo parent
+on new frames. Tunneling is disabled on this path.
+
+- The same visible cursor appears in both eyes of the active application window.
+- Slide either identified touchpad in X/Y to move the cursor in X/Y. Delivered
+  coordinate signs are preserved; the app does not toggle system direction settings.
+- Keep sliding outwards at an eye edge to scroll the nearest eligible list.
+- Single tap clicks the captured cursor target after the double-tap interval.
+- Double tap returns within the active window without issuing a preceding click.
+- Long press invokes the cursor target's long-click action, or focuses that target
+  before delegating MENU. Mouse and controller input keep their normal routes.
+- Pending clicks are cancelled on focus loss/detach, target replacement, or
+  observed adapter data changes. Each window owns its cursor and gesture state.
+
+## Window coverage
+
+| Entry | Implementation |
+|---|---|
+| Browse, search, channel/uploads, sign-in/link, web, player, splash/launchers | `MotherActivity.onContentChanged` |
+| Settings, playback options, comments/chat, list/radio preferences, errors | Existing Activity/Fragment content, same stereo root |
+| Text-edit AlertDialog and proxy AlertDialog | Complete dialog content, including title/buttons; public Window APIs |
+| Local file selection | `RayNeoFilePickerActivity` adapter |
+
+SharedModules' generic selector and YesNoDialog classes have no callers in this
+checkout's application code. Future new Dialog/Popup creation sites must be added
+to this inventory and adapted; wrapping an Activity does not wrap another Window.
+System-owned permission dialogs, input method, voice-input and external activities
+are outside this app's window ownership.
+
+## Build
+
+Use JDK 17, Android SDK platform 34 and build tools 30.0.3, and the pinned submodules.
+The Gradle wrapper uses Gradle 7.5 / AGP 7.4.2.
+
+```powershell
+git submodule update --init --recursive
+./scripts/build-rayneo.ps1 -JavaHome 'PATH/TO/JDK17' -AndroidSdk 'PATH/TO/SDK' -DebugApk
+```
+
+For a release build, create your own keystore and local `keystore.properties`:
+
+```properties
+storeFile=../releases/signing/rayneo.jks
+storePassword=YOUR_LOCAL_PASSWORD
+keyAlias=rayneo
+keyPassword=YOUR_LOCAL_PASSWORD
+```
+
+`storeFile` is resolved relative to `smarttubetv/`. Keystores, properties, APKs and
+local artifacts are ignored by Git. Keep the signing material for future updates.
+Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v1/`.
+
+## Verification boundary
+
+The user explicitly deferred device testing for this first version. Host tests
+exercise ordinary View double rendering, logical sizing, pointer mapping, cursor
+movement, delayed click cancellation, target identity and scrolling. These tests
+do not prove TextureView hardware replay, firmware event delivery, optical
+synchronization, actual online playback or comfort/performance on the glasses.
+
+Pending device acceptance: moving video with controls hidden; subtitles and
+animated controls; all listed pages/dialogs; cursor four-direction motion and
+scrolling; tap/double-tap/long-press; cancel/reopen dialogs; background/return;
+video replacement, resize/rotation/zoom; search/text entry. No device installation
+or runtime acceptance is implied by the first code push.

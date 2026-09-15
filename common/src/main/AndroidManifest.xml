@@ -33,6 +33,8 @@
     <!-- Add requestLegacyExternalStorage to fix unavailable storage on Android 10 (doesn't work on Android 11) -->
     <!-- More info: https://stackoverflow.com/questions/63364476/requestlegacyexternalstorage-is-not-working-in-android-11-api-30 -->
     <application android:requestLegacyExternalStorage="true">
+        <activity android:name="com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoFilePickerActivity"
+            android:exported="false" android:theme="@style/MaterialFileTheme" />
         <receiver
             android:name="com.liskovsoft.smartyoutubetv2.common.misc.RemoteControlReceiver"
             android:enabled="true"
