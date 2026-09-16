@@ -7,7 +7,7 @@ import android.content.Intent;
 import com.liskovsoft.mediaserviceinterfaces.oauth.Account;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.prefs.GlobalPreferences;
 import com.liskovsoft.sharedutils.rx.RxHelper;
@@ -228,7 +228,7 @@ public class SplashPresenter extends BasePresenter<SplashView> {
             try {
                 channelId = IntentExtractor.extractChannelId(intent);
             } catch (IllegalArgumentException e) {
-                RayNeoMessages.showLongMessage(getContext(), e.getMessage());
+                MessageHelpers.showLongMessage(getContext(), e.getMessage());
             }
 
             if (channelId != null) {
@@ -306,7 +306,7 @@ public class SplashPresenter extends BasePresenter<SplashView> {
 
             // For debug purpose when using ATV bridge.
             if (IntentExtractor.hasData(intent) && !IntentExtractor.isATVChannelUrl(intent) && !IntentExtractor.isRootUrl(intent)) {
-                RayNeoMessages.showLongMessage(getContext(), String.format("Can't process intent: %s", Helpers.toString(intent)));
+                MessageHelpers.showLongMessage(getContext(), String.format("Can't process intent: %s", Helpers.toString(intent)));
             }
 
             return true;

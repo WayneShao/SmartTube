@@ -25,7 +25,7 @@ import androidx.leanback.widget.SpeechRecognitionCallback;
 
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.helpers.KeyHelpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.helpers.PermissionHelpers;
 import com.liskovsoft.smartyoutubetv2.common.misc.MotherActivity;
 import com.liskovsoft.smartyoutubetv2.common.prefs.SearchData;
@@ -240,7 +240,7 @@ public class ChannelHeaderPresenter extends RowPresenter {
         @Override
         public void recognizeSpeech() {
             if (PermissionHelpers.hasMicPermissions(mContext)) {
-                RayNeoMessages.showMessage(mContext, R.string.disable_mic_permission);
+                MessageHelpers.showMessage(mContext, R.string.disable_mic_permission);
             }
 
             try {

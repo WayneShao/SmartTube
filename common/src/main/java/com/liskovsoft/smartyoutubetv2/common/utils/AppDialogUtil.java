@@ -15,7 +15,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.ItemGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
 import com.liskovsoft.mediaserviceinterfaces.data.PlaylistInfo;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.helpers.PermissionHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
@@ -477,7 +477,7 @@ public class AppDialogUtil {
                         //playerTweaksData.setPlayerAutoVolumeEnabled(scalePercent == 100);
 
                         if (scalePercent > 100) {
-                            RayNeoMessages.showLongMessage(context, R.string.volume_boost_warning);
+                            MessageHelpers.showLongMessage(context, R.string.volume_boost_warning);
                         }
 
                         onSetCallback.run();
@@ -741,7 +741,7 @@ public class AppDialogUtil {
                             onClose.run();
                         }
                     } else {
-                        RayNeoMessages.showMessage(context, R.string.wait_data_loading);
+                        MessageHelpers.showMessage(context, R.string.wait_data_loading);
 
                         serviceManager.loadMetadata(
                                 video,
@@ -994,7 +994,7 @@ public class AppDialogUtil {
             if (FILE_PICKER_REQUEST_CODE == requestCode && resultCode == Activity.RESULT_OK) {
                 String filePath = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
                 RxHelper.execute(mService.importGroupsObserve(new File(filePath)), result -> pinGroups(context, result),
-                        error -> RayNeoMessages.showLongMessage(context, error.getMessage()));
+                        error -> MessageHelpers.showLongMessage(context, error.getMessage()));
             }
         });
         return activity;
@@ -1003,14 +1003,14 @@ public class AppDialogUtil {
     private static void pinGroups(Context context, @NonNull List<ItemGroup> newGroups) {
         if (newGroups.isEmpty()) {
             // Already added to Subscriptions section
-            RayNeoMessages.showMessage(context, context.getString(R.string.msg_done));
+            MessageHelpers.showMessage(context, context.getString(R.string.msg_done));
             return;
         }
 
         for (ItemGroup group : newGroups) {
             BrowsePresenter.instance(context).pinItem(Video.from(group));
         }
-        RayNeoMessages.showMessage(context, context.getString(R.string.pinned_to_sidebar));
+        MessageHelpers.showMessage(context, context.getString(R.string.pinned_to_sidebar));
     }
 
     public static void showConfirmationDialog(Context context, String title, Runnable onConfirm) {
@@ -1072,14 +1072,14 @@ public class AppDialogUtil {
                         error -> {
                             // Fallback to something on error
                             Log.e(TAG, "Get playlists error: %s", error.getMessage());
-                            RayNeoMessages.showMessage(context, R.string.section_is_empty);
+                            MessageHelpers.showMessage(context, R.string.section_is_empty);
                         }
                 );
     }
 
     public static void showAddToPlaylistDialog(Context context, Video video, VideoMenuCallback callback, List<PlaylistInfo> playlistInfos, Runnable onFinish) {
         if (playlistInfos == null) {
-            RayNeoMessages.showMessage(context, R.string.msg_signed_users_only);
+            MessageHelpers.showMessage(context, R.string.msg_signed_users_only);
             return;
         }
 
@@ -1130,7 +1130,7 @@ public class AppDialogUtil {
         }
 
         // Handle error: Maximum playlist size exceeded (> 5000 items)
-        RxHelper.execute(editObserve, error -> RayNeoMessages.showLongMessage(context, error.getMessage()));
+        RxHelper.execute(editObserve, error -> MessageHelpers.showLongMessage(context, error.getMessage()));
     }
 
     public static void showPlaylistOrderDialog(Context context, Video video, Runnable onClose) {
@@ -1172,7 +1172,7 @@ public class AppDialogUtil {
                 if (optionItem.isSelected()) {
                     RxHelper.execute(
                             YouTubeMediaItemService.instance().setPlaylistOrderObserve(playlistId, pair[1]),
-                            (error) -> RayNeoMessages.showMessage(context, R.string.owned_playlist_warning),
+                            (error) -> MessageHelpers.showMessage(context, R.string.owned_playlist_warning),
                             () -> {
                                 generalData.setPlaylistOrder(playlistId, pair[1]);
                                 ViewManager.instance(context).refreshCurrentView();
@@ -1180,7 +1180,7 @@ public class AppDialogUtil {
                                     dialogPresenter.closeDialog();
                                     onClose.run();
                                 }
-                                RayNeoMessages.showMessage(context, R.string.msg_done);
+                                MessageHelpers.showMessage(context, R.string.msg_done);
                             }
                     );
                 }

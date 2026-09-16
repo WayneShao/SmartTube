@@ -14,7 +14,7 @@ are separate evidence levels.
 | Text-edit/proxy AlertDialogs | explicit RayNeoWindow.install after show | Full title/content/buttons wrapped; cancel and focus lifecycle retained |
 | Channel/channel-upload delayed loading spinners | Previously added to DecorView | **Miss fixed in v4:** overlayRoot selects StereoLayout |
 | Player and title-bar tooltips | Previously WindowManager TYPE_APPLICATION_SUB_PANEL | **Miss fixed in v4:** anchored overlay in the anchor's own stereo root; hide removes only its own view |
-| Foreground app notices/errors/proxy results/exit prompts | MessageHelpers and direct Toast sites | **Expanded in v4:** RayNeoMessages routes app calls to focused stereo window; non-RayNeo/background fallback retained |
+| Foreground app notices/errors/proxy results/exit prompts | MessageHelpers and direct Toast sites | **Expanded in v4:** MessageHelpers presenter routes shared helper calls to the focused stereo window; non-RayNeo/background fallback retained |
 | Screensaver dim layer | Uniform full-DecorView color | Both eye regions receive the same dimming; not a content-copy omission |
 | Splash, section launchers, backup receiver | Route/import without interactive page | No independent visual content to duplicate |
 
@@ -27,8 +27,8 @@ are separate evidence levels.
 - Legacy LoopingVideoView/PreviewCardView/VideoCardView has no discovered final-card
   caller or resource use; it is not counted as a tested player path.
 - ToastFactory has no callers. A Toast example inside TextViewLinkHandler is a comment.
-- Dependencies can still generate their own messages; routing app call sites does not
-  intercept every third-party/system Toast globally.
+- v5 registers a generic MessageHelpers presenter, covering app and dependency calls
+  through that helper. Direct third-party/system Toast calls remain outside this hook.
 
 ## Boundaries requiring separate acceptance
 

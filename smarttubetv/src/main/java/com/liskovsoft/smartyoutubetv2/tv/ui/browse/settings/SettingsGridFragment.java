@@ -151,7 +151,7 @@ public class SettingsGridFragment extends GridFragment implements SettingsSectio
                 //    PlaybackPresenter.instance(getContext()).forceFinish();
                 //}
             } else {
-                com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages.showMessage(getContext(), item.toString());
+                com.liskovsoft.sharedutils.helpers.MessageHelpers.showMessage(getContext(), item.toString());
             }
         }
     }

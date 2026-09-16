@@ -16,7 +16,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.MediaItemFormatInfo;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.mediaserviceinterfaces.data.NotificationState;
 import com.liskovsoft.mediaserviceinterfaces.data.PlaylistInfo;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -507,7 +507,7 @@ public class MediaServiceManager implements OnAccountChange {
                 // NOTE: Crashes RecycleView IndexOutOfBoundsException when doing add immediately after clear
                 Utils.postDelayed(() -> ChannelPresenter.instance(context).updateRows(groups), 100);
             } else {
-                RayNeoMessages.showMessage(context, "Unknown type of channel");
+                MessageHelpers.showMessage(context, "Unknown type of channel");
             }
         }, error -> LoadingManager.showLoading(context, false), () -> LoadingManager.showLoading(context, false));
     }

@@ -7,7 +7,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.FeedbackReasons.FeedbackItem;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.PlaylistInfo;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
@@ -379,7 +379,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
         if (mCallback != null) {
             mCallback.onItemAction(mVideo, VideoMenuCallback.ACTION_REMOVE);
         } else {
-            RayNeoMessages.showMessage(getContext(), R.string.you_wont_see_this_video);
+            MessageHelpers.showMessage(getContext(), R.string.you_wont_see_this_video);
         }
         mDialogPresenter.closeDialog();
     }
@@ -405,7 +405,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
                                         if (mCallback != null) {
                                             mCallback.onItemAction(mVideo, VideoMenuCallback.ACTION_REMOVE);
                                         } else {
-                                            RayNeoMessages.showMessage(getContext(), R.string.you_wont_see_this_video);
+                                            MessageHelpers.showMessage(getContext(), R.string.you_wont_see_this_video);
                                         }
                                     }
                             );
@@ -436,10 +436,10 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
                 UiOptionItem.from(buttonText, optionItem -> {
                     if (isBlocked) {
                         blockedChannelData.removeChannel(channelId, channelName);
-                        RayNeoMessages.showMessage(getContext(), R.string.channel_unblocked);
+                        MessageHelpers.showMessage(getContext(), R.string.channel_unblocked);
                     } else {
                         blockedChannelData.addChannel(channelId, channelName);
-                        RayNeoMessages.showMessage(getContext(), R.string.channel_blocked);
+                        MessageHelpers.showMessage(getContext(), R.string.channel_blocked);
                     }
 
                     if (mCallback != null) {
@@ -485,7 +485,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
         if (mCallback != null) {
             mCallback.onItemAction(mVideo, VideoMenuCallback.ACTION_REMOVE);
         } else {
-            RayNeoMessages.showMessage(getContext(), R.string.removed_from_history);
+            MessageHelpers.showMessage(getContext(), R.string.removed_from_history);
         }
         VideoStateService stateService = VideoStateService.instance(getContext());
         stateService.removeByVideoId(mVideo.videoId);
@@ -588,7 +588,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
         mDialogPresenter.appendSingleButton(
                 UiOptionItem.from(getContext().getString(R.string.action_video_info),
                         optionItem -> {
-                            RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
+                            MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
                             mServiceManager.loadMetadata(mVideo, metadata -> {
                                 String description = metadata.getDescription();
                                 if (description != null) {
@@ -599,7 +599,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
                                         if (newDescription != null) {
                                             showLongTextDialog(newDescription);
                                         } else {
-                                            RayNeoMessages.showMessage(getContext(), R.string.description_not_found);
+                                            MessageHelpers.showMessage(getContext(), R.string.description_not_found);
                                         }
                                     });
                                 }
@@ -620,7 +620,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
         mDialogPresenter.appendSingleButton(
                 UiOptionItem.from(getContext().getString(R.string.open_comments),
                         optionItem -> {
-                            RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
+                            MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
                             mServiceManager.loadMetadata(mVideo, metadata -> {
                                 CommentsController controller = new CommentsController(getContext(), metadata);
                                 controller.onButtonClicked(R.id.action_chat, PlayerUI.BUTTON_ON);
@@ -738,7 +738,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
                             }
 
                             closeDialog();
-                            RayNeoMessages.showMessage(getContext(), String.format("%s: %s",
+                            MessageHelpers.showMessage(getContext(), String.format("%s: %s",
                                     mVideo.getAuthor(),
                                     getContext().getString(R.string.added_to_playback_queue))
                             );
@@ -771,7 +771,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
                             }
 
                             closeDialog();
-                            RayNeoMessages.showMessage(getContext(), String.format("%s: %s",
+                            MessageHelpers.showMessage(getContext(), String.format("%s: %s",
                                     mVideo.getAuthor(),
                                     getContext().getString(R.string.removed_from_playback_queue))
                             );
@@ -804,7 +804,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
                             }
 
                             closeDialog();
-                            RayNeoMessages.showMessage(getContext(), String.format("%s: %s",
+                            MessageHelpers.showMessage(getContext(), String.format("%s: %s",
                                     mVideo.getAuthor(),
                                     getContext().getString(R.string.play_next))
                             );
@@ -863,7 +863,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
                         optionItem -> {
                             reminderService.toggleReminder(mVideo);
                             closeDialog();
-                            RayNeoMessages.showMessage(getContext(), reminderSet ? R.string.msg_done : R.string.playback_starts_shortly);
+                            MessageHelpers.showMessage(getContext(), reminderSet ? R.string.msg_done : R.string.playback_starts_shortly);
                         }
                 ));
     }
@@ -874,9 +874,9 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
             Observable<Void> editObserve = mVideo.mediaItem != null ?
                     mMediaItemService.addToPlaylistObserve(playlistId, mVideo.mediaItem) : mMediaItemService.addToPlaylistObserve(playlistId, mVideo.videoId);
             // Handle error: Maximum playlist size exceeded (> 5000 items)
-            mAddToPlaylistAction = RxHelper.execute(editObserve, error -> RayNeoMessages.showLongMessage(getContext(), error.getMessage()));
+            mAddToPlaylistAction = RxHelper.execute(editObserve, error -> MessageHelpers.showLongMessage(getContext(), error.getMessage()));
             mDialogPresenter.closeDialog();
-            RayNeoMessages.showMessage(getContext(),
+            MessageHelpers.showMessage(getContext(),
                     getContext().getString(R.string.added_to, playlistTitle));
         } else {
             // Check that the current video belongs to the right section
@@ -886,7 +886,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
             Observable<Void> editObserve = mMediaItemService.removeFromPlaylistObserve(playlistId, mVideo.videoId);
             mAddToPlaylistAction = RxHelper.execute(editObserve);
             mDialogPresenter.closeDialog();
-            RayNeoMessages.showMessage(getContext(),
+            MessageHelpers.showMessage(getContext(),
                     getContext().getString(R.string.removed_from, playlistTitle));
         }
     }
@@ -896,7 +896,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
     //        Observable<Void> editObserve = mItemManager.addToPlaylistObserve(playlistId, mVideo.videoId);
     //        mAddToPlaylistAction = RxUtils.execute(editObserve);
     //        mDialogPresenter.closeDialog();
-    //        RayNeoMessages.showMessage(getContext(),
+    //        MessageHelpers.showMessage(getContext(),
     //                getContext().getString(R.string.added_to, playlistTitle));
     //    } else {
     //        AppDialogUtil.showConfirmationDialog(getContext(), () -> {
@@ -907,7 +907,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
     //            Observable<Void> editObserve = mItemManager.removeFromPlaylistObserve(playlistId, mVideo.videoId);
     //            mAddToPlaylistAction = RxUtils.execute(editObserve);
     //            mDialogPresenter.closeDialog();
-    //            RayNeoMessages.showMessage(getContext(),
+    //            MessageHelpers.showMessage(getContext(),
     //                    getContext().getString(R.string.removed_from, playlistTitle));
     //        }, getContext().getString(R.string.dialog_remove_from, playlistTitle));
     //    }
@@ -926,7 +926,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
         if (mVideo.isSynced || mVideo.isSubscribed || mVideo.isChannel() || (!getSignInService().isSigned() && mVideo.channelId != null)) {
             toggleSubscribe(mVideo);
         } else {
-            RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
+            MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
 
             mServiceManager.loadMetadata(mVideo, metadata -> {
                 mVideo.sync(metadata);
@@ -953,7 +953,7 @@ public class VideoMenuPresenter extends BaseMenuPresenter {
             mCallback.onItemAction(video, VideoMenuCallback.ACTION_UNSUBSCRIBE);
         }
 
-        RayNeoMessages.showMessage(getContext(), getContext().getString(!video.isSubscribed ? R.string.unsubscribed_from_channel : R.string.subscribed_to_channel));
+        MessageHelpers.showMessage(getContext(), getContext().getString(!video.isSubscribed ? R.string.unsubscribed_from_channel : R.string.subscribed_to_channel));
     }
 
     @Override

@@ -5,7 +5,7 @@ import android.os.Build.VERSION;
 import androidx.multidex.MultiDexApplication;
 
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.AddDeviceView;
@@ -55,6 +55,7 @@ public class MainApplication extends MultiDexApplication { // fix: Didn't find c
     @Override
     public void onCreate() {
         super.onCreate();
+        com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessagePresenter.install(this);
 
         // ByeByeDPI fix
         // https://android-review.googlesource.com/c/platform/external/conscrypt/+/89408/
@@ -134,7 +135,7 @@ public class MainApplication extends MultiDexApplication { // fix: Didn't find c
 
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             if (shouldIgnore(e)) {
-                RayNeoMessages.showLongMessage(this, e.getMessage());
+                MessageHelpers.showLongMessage(this, e.getMessage());
                 return;
             }
 

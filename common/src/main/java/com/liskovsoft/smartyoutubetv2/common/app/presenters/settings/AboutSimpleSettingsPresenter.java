@@ -3,7 +3,7 @@ package com.liskovsoft.smartyoutubetv2.common.app.presenters.settings;
 import android.content.Context;
 import com.liskovsoft.appupdatechecker2.AppUpdateChecker;
 import com.liskovsoft.sharedutils.helpers.AppInfoHelpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.UiOptionItem;
@@ -65,7 +65,7 @@ public class AboutSimpleSettingsPresenter extends BasePresenter<Void> {
     }
 
     private void startBridgePresenter() {
-        RayNeoMessages.showLongMessage(getContext(), R.string.enable_voice_search_desc);
+        MessageHelpers.showLongMessage(getContext(), R.string.enable_voice_search_desc);
 
         ATVBridgePresenter atvPresenter = ATVBridgePresenter.instance(getContext());
         atvPresenter.runBridgeInstaller(true);

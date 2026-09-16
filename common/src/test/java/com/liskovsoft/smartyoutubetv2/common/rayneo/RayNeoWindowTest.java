@@ -1,5 +1,6 @@
 package com.liskovsoft.smartyoutubetv2.common.rayneo;
 
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import android.app.Activity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -114,12 +115,14 @@ public class RayNeoWindowTest {
         owner.getWindow().getCallback().onWindowFocusChanged(true);
         StereoLayout root = content(owner.getWindow());
         measure(root);
-        RayNeoMessages.showMessage(owner.getApplicationContext(), "network notice");
+        RayNeoMessagePresenter.install(owner);
+        MessageHelpers.showMessage(owner.getApplicationContext(), "network notice");
         assertEquals(2, root.getChildCount());
         android.widget.TextView notice = (android.widget.TextView) root.getChildAt(1);
         assertEquals("network notice", notice.getText().toString());
-        RayNeoMessages.cancelToasts();
+        MessageHelpers.cancelToasts();
         assertEquals(View.GONE, notice.getVisibility());
+        MessageHelpers.setMessagePresenter(null);
         controller.pause().stop().destroy();
     }
 }

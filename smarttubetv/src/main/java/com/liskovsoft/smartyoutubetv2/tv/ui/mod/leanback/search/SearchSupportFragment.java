@@ -39,7 +39,7 @@ import androidx.leanback.widget.SpeechRecognitionCallback;
 import androidx.leanback.widget.VerticalGridView;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.helpers.KeyHelpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.SearchPresenter;
 import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
 import com.liskovsoft.smartyoutubetv2.tv.BuildConfig;
@@ -246,7 +246,7 @@ public class SearchSupportFragment extends Fragment {
                         AUDIO_PERMISSION_REQUEST_CODE);
             } catch (ActivityNotFoundException e) {
                 e.printStackTrace();
-                RayNeoMessages.showMessage(getContext(), e.getMessage());
+                MessageHelpers.showMessage(getContext(), e.getMessage());
             }
         }
     };
@@ -259,7 +259,7 @@ public class SearchSupportFragment extends Fragment {
                     && grantResults[0] == PERMISSION_GRANTED) {
                 startRecognition();
             } else {
-                RayNeoMessages.showMessage(getContext(), com.liskovsoft.smartyoutubetv2.common.R.string.not_supported_by_device);
+                MessageHelpers.showMessage(getContext(), com.liskovsoft.smartyoutubetv2.common.R.string.not_supported_by_device);
             }
         }
     }

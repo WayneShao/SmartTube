@@ -8,7 +8,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.MediaFormat;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemFormatInfo;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
@@ -235,7 +235,7 @@ public class VideoLoaderController extends BasePlayerController {
         } else if (!current.isSynced) { // Maybe there's nothing left. E.g. when casting from phone
             // Wait in a loop while suggestions have been loaded...
             if (showLoadingMsg) {
-                RayNeoMessages.showMessage(getContext(), R.string.wait_data_loading);
+                MessageHelpers.showMessage(getContext(), R.string.wait_data_loading);
             }
             // Short videos next fix (suggestions aren't loaded yet)
             boolean isEnded = getPlayer() != null && Math.abs(getPlayer().getDurationMs() - getPlayer().getPositionMs()) < 100;
@@ -280,7 +280,7 @@ public class VideoLoaderController extends BasePlayerController {
         applyAspectRatio(formatInfo);
 
         if (formatInfo.getPaidContentText() != null && getSponsorBlockData().isPaidContentNotificationEnabled()) {
-            RayNeoMessages.showMessage(getContext(), formatInfo.getPaidContentText());
+            MessageHelpers.showMessage(getContext(), formatInfo.getPaidContentText());
         }
 
         if (formatInfo.isUnplayable()) {

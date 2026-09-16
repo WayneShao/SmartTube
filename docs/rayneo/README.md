@@ -2,7 +2,7 @@
 
 Based on SmartTube 32.47 (`249bc833f`). Branch: `rayneo/x3pro`.
 Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
-version `32.47-rayneo.4`. This package can coexist with official SmartTube.
+version `32.47-rayneo.5`. This package can coexist with official SmartTube.
 
 ## Display and input
 
@@ -67,7 +67,7 @@ keyPassword=YOUR_LOCAL_PASSWORD
 
 `storeFile` is resolved relative to `smarttubetv/`. Keystores, properties, APKs and
 local artifacts are ignored by Git. Keep the signing material for future updates.
-Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v4/`.
+Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v5/`.
 
 ## Verification boundary
 
@@ -84,3 +84,22 @@ video replacement, resize/rotation/zoom; search/text entry. No device installati
 or runtime acceptance is implied by the first code push.
 
 Full creation-path and overlay inventory: [WINDOW-COVERAGE.md](WINDOW-COVERAGE.md).
+
+## Keeping the message adaptation isolated
+
+Business code retains the upstream MessageHelpers API. SharedModules adds only a
+generic MessagePresenter extension; RayNeoMessagePresenter binds it to the active
+stereo window at application startup. Native Toast fallback and cleanup remain in
+the helper, independently of custom-message timers.
+
+The root SharedModules submodule is pinned to the WayneShao fork. For an existing
+checkout after pulling this change, run `git submodule sync -- SharedModules`
+before `git submodule update --init --recursive`. Keep the submodule commit
+published before pushing the main repository pointer. Future upstream dependency
+updates must carry the small presenter hook forward; do not reset the pointer to
+an unmodified upstream revision. MediaServiceCore and its nested dependency are
+unchanged.
+
+Host API regression tests live in common under MessagePresenterTest, using the
+Java 17-compatible Robolectric harness already used by this port. Physical
+acceptance remains separate: see [v5 validation](VALIDATION-v5.md).

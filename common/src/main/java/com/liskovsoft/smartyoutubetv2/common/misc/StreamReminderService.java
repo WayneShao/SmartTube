@@ -6,7 +6,7 @@ import android.util.Pair;
 import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import com.liskovsoft.mediaserviceinterfaces.ServiceManager;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemFormatInfo;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
@@ -108,7 +108,7 @@ public class StreamReminderService implements TickleListener {
             } else {
                 ViewManager.instance(mContext).movePlayerToForeground();
                 PlaybackPresenter.instance(mContext).openVideo(video);
-                RayNeoMessages.showLongMessage(mContext, R.string.starting_stream);
+                MessageHelpers.showLongMessage(mContext, R.string.starting_stream);
             }
 
             mGeneralData.removePendingStream(video);

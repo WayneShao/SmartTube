@@ -5,7 +5,7 @@ import android.content.Context;
 
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.UiOptionItem;
@@ -192,7 +192,7 @@ public class BackupSettingsPresenter extends BasePresenter<Void> {
                     AppDialogUtil.showConfirmationDialog(getContext(), getContext().getString(R.string.app_backup), () -> {
                         mSidebarService.enableSection(MediaGroup.TYPE_SETTINGS, true); // prevent Settings lock
                         backupManager.checkPermAndBackup();
-                        RayNeoMessages.showMessage(getContext(), R.string.msg_done);
+                        MessageHelpers.showMessage(getContext(), R.string.msg_done);
                     });
                 }));
 
@@ -213,7 +213,7 @@ public class BackupSettingsPresenter extends BasePresenter<Void> {
         if (backups != null && !backups.isEmpty()) {
             showLocalRestoreSelectorDialog(backups, backupManager);
         } else {
-            RayNeoMessages.showLongMessage(getContext(), R.string.nothing_found);
+            MessageHelpers.showLongMessage(getContext(), R.string.nothing_found);
         }
     }
 

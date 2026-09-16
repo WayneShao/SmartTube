@@ -256,7 +256,7 @@ public class VideoGridFragment extends GridFragment implements VideoSection {
             if (item instanceof Video) {
                 mMainPresenter.onVideoItemLongClicked((Video) item);
             } else {
-                com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages.showMessage(getActivity(), item.toString());
+                com.liskovsoft.sharedutils.helpers.MessageHelpers.showMessage(getActivity(), item.toString());
             }
         }
     }
@@ -269,7 +269,7 @@ public class VideoGridFragment extends GridFragment implements VideoSection {
             if (item instanceof Video) {
                 mMainPresenter.onVideoItemClicked((Video) item);
             } else {
-                com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages.showMessage(getActivity(), item.toString());
+                com.liskovsoft.sharedutils.helpers.MessageHelpers.showMessage(getActivity(), item.toString());
             }
         }
     }

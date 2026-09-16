@@ -63,7 +63,7 @@ import com.jakewharton.processphoenix.ProcessPhoenix;
 import com.liskovsoft.sharedutils.helpers.AppInfoHelpers;
 import com.liskovsoft.sharedutils.helpers.DeviceHelpers;
 import com.liskovsoft.sharedutils.helpers.Helpers;
-import com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessages;
+import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.misc.WeakHashSet;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.okhttp.OkHttpManager;
@@ -418,7 +418,7 @@ public class Utils {
             return;
         }
         player.setVolume(volume / 100f);
-        RayNeoMessages.showMessage(context, context.getString(R.string.volume, getPlayerVolume(player)));
+        MessageHelpers.showMessage(context, context.getString(R.string.volume, getPlayerVolume(player)));
     }
 
     public static void volumeUp(Context context, PlayerManager player, boolean up) {
@@ -458,7 +458,7 @@ public class Utils {
 
             // Check that volume is set.
             // Because global value may not be supported (see FireTV Stick).
-            RayNeoMessages.showMessage(context, context.getString(R.string.volume, (int) (player.getVolume() * 100)));
+            MessageHelpers.showMessage(context, context.getString(R.string.volume, (int) (player.getVolume() * 100)));
         }
     }
 
@@ -742,19 +742,19 @@ public class Utils {
     public static void showRepeatInfo(Context context, int modeIndex) {
         switch (modeIndex) {
             case PlayerConstants.PLAYBACK_MODE_ALL:
-                RayNeoMessages.showMessage(context, R.string.repeat_mode_all);
+                MessageHelpers.showMessage(context, R.string.repeat_mode_all);
                 break;
             case PlayerConstants.PLAYBACK_MODE_ONE:
-                RayNeoMessages.showMessage(context, R.string.repeat_mode_one);
+                MessageHelpers.showMessage(context, R.string.repeat_mode_one);
                 break;
             case PlayerConstants.PLAYBACK_MODE_PAUSE:
-                RayNeoMessages.showMessage(context, R.string.repeat_mode_pause);
+                MessageHelpers.showMessage(context, R.string.repeat_mode_pause);
                 break;
             case PlayerConstants.PLAYBACK_MODE_LIST:
-                RayNeoMessages.showMessage(context, R.string.repeat_mode_pause_alt);
+                MessageHelpers.showMessage(context, R.string.repeat_mode_pause_alt);
                 break;
             case PlayerConstants.PLAYBACK_MODE_CLOSE:
-                RayNeoMessages.showMessage(context, R.string.repeat_mode_none);
+                MessageHelpers.showMessage(context, R.string.repeat_mode_none);
                 break;
         }
     }
@@ -800,7 +800,7 @@ public class Utils {
     }
 
     public static void showNotCompatibleMessage(Context context, int msgResId) {
-        RayNeoMessages.showMessage(context, String.format("%s '%s'",
+        MessageHelpers.showMessage(context, String.format("%s '%s'",
                 context.getString(R.string.not_compatible_with),
                 context.getString(msgResId)));
     }
@@ -1292,7 +1292,7 @@ public class Utils {
             builder.setSpan(new ClickableSpan() {
                                 @Override
                                 public void onClick(@NonNull View widget) {
-                                    RayNeoMessages.showMessage(context, "On link clicked " + span.getURL());
+                                    MessageHelpers.showMessage(context, "On link clicked " + span.getURL());
                                 }
                             },
                     builder.getSpanStart(span),
