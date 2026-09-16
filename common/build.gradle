@@ -101,6 +101,7 @@ dependencies {
     implementation 'com.jakewharton:process-phoenix:' + phoenixVersion
 
     implementation project(':leanbackassistant')
+    implementation project(':leanback-1.0.0') // RayNeo recovery reads native grid selection.
 
     implementation project(':appupdatechecker2')
 

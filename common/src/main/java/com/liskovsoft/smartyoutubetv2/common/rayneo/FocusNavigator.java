@@ -5,97 +5,56 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ListView;
-import java.lang.ref.WeakReference;
+import androidx.leanback.widget.BaseGridView;
+import androidx.recyclerview.widget.RecyclerView;
 
 /** Restores per-window focus and supplies the normal ViewRoot DPAD fallback for local dispatch. */
-final class FocusNavigator implements ViewTreeObserver.OnGlobalFocusChangeListener, ViewTreeObserver.OnPreDrawListener {
+final class FocusNavigator implements ViewTreeObserver.OnGlobalFocusChangeListener, ViewTreeObserver.OnPreDrawListener, ViewTreeObserver.OnGlobalLayoutListener {
     interface Dispatch { boolean key(KeyEvent event); }
     private final StereoLayout root;
     private final Dispatch dispatch;
-    private WeakReference<View> previous = new WeakReference<>(null);
-    private int previousRow = -1;
-    private Object previousAdapter;
-    private long previousItemId;
+    private final FocusRecovery recovery;
+    private boolean recoveryRequested;
+    private boolean closed;
+    private Runnable observation;
     private Runnable pending;
     private FocusTarget pendingTarget;
 
     FocusNavigator(StereoLayout root, Dispatch dispatch) {
         this.root = root;
         this.dispatch = dispatch;
+        recovery = new FocusRecovery(root);
         root.getViewTreeObserver().addOnGlobalFocusChangeListener(this);
         root.getViewTreeObserver().addOnPreDrawListener(this);
-        remember(root.findFocus());
+        root.getViewTreeObserver().addOnGlobalLayoutListener(this);
+        recovery.remember(root.findFocus());
     }
 
-    private boolean usable(View view) {
-        return insideWindow(view) && view.isFocusable();
-    }
-
-    private boolean insideWindow(View view) {
-        if (view == null || view == root || !view.isAttachedToWindow() || !view.isShown()
-                || !view.isEnabled()) return false;
-        for (View ancestor = view; ancestor != null;
-             ancestor = ancestor.getParent() instanceof View ? (View) ancestor.getParent() : null) {
-            if (ancestor == root) return true;
-        }
-        return false;
-    }
+    private boolean usable(View view) { return recovery.usable(view); }
 
     @Override public void onGlobalFocusChanged(View oldFocus, View newFocus) {
-        remember(oldFocus);
-        remember(newFocus);
+        recovery.remember(oldFocus);
+        recovery.remember(newFocus);
+        recoveryRequested = true;
         root.postInvalidateOnAnimation();
     }
 
-    @Override public boolean onPreDraw() { remember(root.findFocus()); return true; }
+    @Override public void onGlobalLayout() { recoveryRequested = true; }
 
-    private void remember(View view) {
-        if (!usable(view)) return;
-        previous = new WeakReference<>(view);
-        if (view instanceof ListView) {
-            ListView list = (ListView) view;
-            if (list.getSelectedItemPosition() >= 0) {
-                previousRow = list.getSelectedItemPosition();
-                previousAdapter = list.getAdapter();
-                previousItemId = list.getSelectedItemId();
-            }
+    @Override public boolean onPreDraw() {
+        if (!closed && recoveryRequested && root.hasWindowFocus() && root.isAttachedToWindow()
+                && !root.isLayoutRequested()) {
+            recoveryRequested = false;
+            if (!recovery.valid(root.findFocus())) prepare();
         }
+        recovery.remember(root.findFocus());
+        return true;
     }
 
-    View prepare() {
-        View chosen = root.findFocus();
-        if (!usable(chosen)) chosen = previous.get();
-        if (!usable(chosen)) {
-            for (View candidate : root.getFocusables(View.FOCUS_FORWARD)) {
-                if (usable(candidate)) { chosen = candidate; break; }
-            }
-        }
-        if (!usable(chosen)) return null;
-        if (root.isInTouchMode()) {
-            boolean wasFocusable = chosen.isFocusableInTouchMode();
-            chosen.setFocusableInTouchMode(true);
-            chosen.requestFocusFromTouch();
-            chosen.setFocusableInTouchMode(wasFocusable);
-        } else chosen.requestFocus();
-        if (!usable(chosen) || root.findFocus() != chosen) return null;
-        if (chosen instanceof ListView) {
-            ListView list = (ListView) chosen;
-            android.widget.ListAdapter adapter = list.getAdapter();
-            if (adapter == null || adapter.getCount() == 0) return null;
-            if (list.getSelectedItemPosition() < 0) {
-                int row = previousAdapter == adapter && previousRow >= 0 && previousRow < adapter.getCount()
-                        && (!adapter.hasStableIds() || adapter.getItemId(previousRow) == previousItemId)
-                        ? previousRow : Math.max(0, list.getFirstVisiblePosition());
-                while (row < adapter.getCount() && !adapter.isEnabled(row)) row++;
-                if (row == adapter.getCount()) return null;
-                list.setSelection(row);
-            }
-        }
-        remember(chosen);
-        return chosen;
-    }
+    View prepare() { return closed ? null : recovery.prepare(); }
 
     void send(int code) {
+        if (closed) return;
         if (code == KeyEvent.KEYCODE_BACK) { deliver(code); return; }
         View focus = prepare();
         if (focus == null) return;
@@ -119,20 +78,70 @@ final class FocusNavigator implements ViewTreeObserver.OnGlobalFocusChangeListen
     private void deliver(int code) {
         long time = SystemClock.uptimeMillis();
         View before = root.findFocus();
-        boolean handled = dispatch.key(new KeyEvent(time, time, KeyEvent.ACTION_DOWN, code, 0));
+        FocusTarget ownership = new FocusTarget(root);
+        String scroll = scrollState(before);
         int direction = direction(code);
-        // Local dispatch does not pass through ViewRootImpl's unhandled-key focus traversal.
-        if (!handled && direction != 0 && before != null && root.findFocus() == before && usable(before)) {
-            View next = before.focusSearch(direction);
-            // Leanback can return a non-focusable fragment container whose descendants own focus.
-            // Let its requestFocus() perform the normal child-focus/header transition callbacks.
-            if (insideWindow(next) && next != before && next.hasFocusable()) next.requestFocus(direction);
+        try {
+            boolean handled = dispatch.key(new KeyEvent(time, time, KeyEvent.ACTION_DOWN, code, 0));
+            // Local dispatch does not pass through ViewRootImpl's unhandled-key focus traversal.
+            if (!handled && direction != 0 && before != null && root.findFocus() == before && usable(before)
+                    && ownership.valid(root) && scroll.equals(scrollState(before))) {
+                View next = before.focusSearch(direction);
+                // Leanback can return a non-focusable fragment container whose descendants own focus.
+                // Let its requestFocus() perform the normal child-focus/header transition callbacks.
+                if (recovery.inside(next) && next != before && next.hasFocusable()) next.requestFocus(direction);
+            }
+            dispatch.key(new KeyEvent(time, time, KeyEvent.ACTION_UP, code, 0));
+        } finally {
+            ownership.close();
         }
-        dispatch.key(new KeyEvent(time, time, KeyEvent.ACTION_UP, code, 0));
-        remember(root.findFocus());
+        recovery.remember(root.findFocus());
+        if (direction != 0) observeResult();
         root.postInvalidateOnAnimation();
         android.util.Log.i("SmartTubeRayNeoInput", "key=" + code + " focus="
                 + (root.findFocus() == null ? "none" : root.findFocus().getClass().getSimpleName()));
+    }
+
+    // Inspect after key dispatch/layout. Recovery never replays the original key.
+    private void observeResult() {
+        if (observation != null) root.removeCallbacks(observation);
+        long deadline = SystemClock.uptimeMillis() + 400;
+        observation = () -> {
+            if (closed || !root.isAttachedToWindow() || !root.hasWindowFocus()) {
+                observation = null;
+                return;
+            }
+            if (root.isLayoutRequested() || recovery.waiting(root)) {
+                if (SystemClock.uptimeMillis() < deadline) root.postOnAnimation(observation);
+                else observation = null; // Later layout/data events can request recovery anew.
+                return;
+            }
+            observation = null;
+            if (!recovery.valid(root.findFocus())) {
+                View restored = prepare();
+                android.util.Log.i("SmartTubeRayNeoInput", "focus recovery="
+                        + (restored == null ? "waiting for content" : restored.getClass().getSimpleName()));
+            }
+        };
+        root.postOnAnimation(observation);
+    }
+
+    private static String scrollState(View view) {
+        for (View node = view; node != null;
+             node = node.getParent() instanceof View ? (View) node.getParent() : null) {
+            if (node instanceof RecyclerView) {
+                RecyclerView grid = (RecyclerView) node;
+                int selected = grid instanceof BaseGridView ? ((BaseGridView) grid).getSelectedPosition() : -1;
+                return selected + ":" + grid.computeVerticalScrollOffset()
+                        + ":" + grid.computeHorizontalScrollOffset() + ":" + grid.getScrollState();
+            }
+            if (node instanceof ListView) {
+                ListView list = (ListView) node;
+                return list.getFirstVisiblePosition() + ":"
+                        + (list.getChildCount() == 0 ? 0 : list.getChildAt(0).getTop());
+            }
+        }
+        return view == null ? "none" : view.getScrollX() + ":" + view.getScrollY();
     }
 
     private static int direction(int code) {
@@ -146,14 +155,19 @@ final class FocusNavigator implements ViewTreeObserver.OnGlobalFocusChangeListen
     }
 
     void cancel() {
+        recoveryRequested = false;
+        if (observation != null) { root.removeCallbacks(observation); observation = null; }
         if (pending != null) { root.removeCallbacks(pending); pending = null; }
         if (pendingTarget != null) { pendingTarget.close(); pendingTarget = null; }
     }
     void close() {
+        closed = true;
         cancel();
+        recovery.close();
         if (root.getViewTreeObserver().isAlive()) {
             root.getViewTreeObserver().removeOnGlobalFocusChangeListener(this);
             root.getViewTreeObserver().removeOnPreDrawListener(this);
+            root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         }
     }
 }

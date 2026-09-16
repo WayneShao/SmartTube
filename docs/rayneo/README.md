@@ -2,7 +2,7 @@
 
 Based on SmartTube 32.47 (`249bc833f`). Branch: `rayneo/x3pro`.
 Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
-version `32.47-rayneo.5`. This package can coexist with official SmartTube.
+version `32.47-rayneo.6`. This package can coexist with official SmartTube.
 
 ## Display and input
 
@@ -67,7 +67,7 @@ keyPassword=YOUR_LOCAL_PASSWORD
 
 `storeFile` is resolved relative to `smarttubetv/`. Keystores, properties, APKs and
 local artifacts are ignored by Git. Keep the signing material for future updates.
-Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v5/`.
+Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v6/`.
 
 ## Verification boundary
 
@@ -102,4 +102,12 @@ unchanged.
 
 Host API regression tests live in common under MessagePresenterTest, using the
 Java 17-compatible Robolectric harness already used by this port. Physical
-acceptance remains separate: see [v5 validation](VALIDATION-v5.md).
+acceptance remains separate: see [current validation](VALIDATION-v6.md).
+
+## Cursor recovery
+
+The default cursor mode navigates native focus/selection. v6 resolves lost focus
+from current ListView/Leanback selection and surviving content regions after UI
+changes. It observes direction outcomes, respects pending layout/scroll and header
+transitions, and never replays a consumed key during recovery. See
+[recovery validation](VALIDATION-v6.md) for the tested cases and device boundary.
