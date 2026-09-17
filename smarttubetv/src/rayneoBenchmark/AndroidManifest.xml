@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <application android:name="android.app.Application" tools:replace="android:name">
+        <activity android:name="com.liskovsoft.smartyoutubetv2.tv.benchmark.VideoBenchmarkActivity"
+            android:exported="true" android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
+    </application>
+</manifest>

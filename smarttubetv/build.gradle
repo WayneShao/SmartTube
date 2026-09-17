@@ -257,3 +257,10 @@ dependencies {
     // ByeByeDPI fix
     implementation 'org.conscrypt:conscrypt-android:' + conscryptVersion
 }
+
+// Separate component benchmark APK; excluded from normal builds.
+if (project.hasProperty('rayneoBenchmark')) {
+    android.sourceSets.main.java.srcDir 'src/rayneoBenchmark/java'
+    android.sourceSets.stfdroid.manifest.srcFile 'src/rayneoBenchmark/AndroidManifest.xml'
+    android.productFlavors.stfdroid.applicationId = 'app.smarttube.rayneo.benchmark'
+}
