@@ -60,6 +60,24 @@ public class StereoLayoutTest {
         }
     }
 
+    @Test public void bitmapReplayDrawsBusinessContentOnceAndRefreshesBothEyes() {
+        int[] draws = {0}, color = {Color.RED};
+        StereoLayout root = layout(new View(context) {
+            @Override protected void onDraw(Canvas canvas) { draws[0]++; canvas.drawColor(color[0]); }
+        });
+        root.setBitmapReplay(true);
+        Bitmap bitmap = Bitmap.createBitmap(1280,480,Bitmap.Config.ARGB_8888);
+        root.draw(new Canvas(bitmap));
+        assertEquals(1,draws[0]);
+        assertEquals(Color.RED,bitmap.getPixel(100,100));
+        assertEquals(Color.RED,bitmap.getPixel(740,100));
+        color[0]=Color.BLUE; root.getChildAt(0).invalidate();
+        root.draw(new Canvas(bitmap));
+        assertEquals(2,draws[0]);
+        assertEquals(Color.BLUE,bitmap.getPixel(100,100));
+        assertEquals(Color.BLUE,bitmap.getPixel(740,100));
+    }
+
     @Test public void preservesOriginalEventAndDragOriginAcrossEyeBoundary() {
         final float[] lastX = {-1};
         View child = new View(context);

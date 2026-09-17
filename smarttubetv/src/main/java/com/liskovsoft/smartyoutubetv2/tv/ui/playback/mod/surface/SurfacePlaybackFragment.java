@@ -24,6 +24,7 @@ import com.liskovsoft.smartyoutubetv2.tv.util.ViewUtil;
  */
 public class SurfacePlaybackFragment extends PlaybackSupportFragment {
     private SurfaceWrapper mVideoSurfaceWrapper;
+    private SurfaceHolder.Callback mSurfaceCallback;
     private AspectRatioFrameLayout mVideoSurfaceRoot;
     private SubtitleView mLeanbackSubtitles;
     private int mSubtitlesPadding;
@@ -39,7 +40,9 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
         if (root == null) {
             throw new IllegalStateException("Can't create root of SurfacePlaybackFragment");
         }
-        mVideoSurfaceWrapper = (PlayerTweaksData.instance(getContext()).isTextureViewEnabled() ||
+        mVideoSurfaceWrapper = useOesSurface()
+                ? new OesSurfaceWrapper(getContext(), this::restoreTextureView)
+                : (PlayerTweaksData.instance(getContext()).isTextureViewEnabled() ||
                 PlayerData.instance(getContext()).getRotationAngle() != 0) ?
                 new TextureViewWrapper(getContext(), root) : new SurfaceViewWrapper(getContext(), root);
         mVideoSurfaceRoot = root.findViewById(com.liskovsoft.smartyoutubetv2.tv.R.id.surface_root);
@@ -51,10 +54,28 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
         return root;
     }
 
+    protected boolean useOesSurface() {
+        return com.liskovsoft.smartyoutubetv2.tv.BuildConfig.RAYNEO_OES
+                && com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeo.isEnabled(getContext());
+    }
+
+    private void restoreTextureView() {
+        if (!(mVideoSurfaceWrapper instanceof OesSurfaceWrapper) || getView() == null) return;
+        SurfaceWrapper previous = mVideoSurfaceWrapper;
+        View old = previous.getSurfaceView();
+        ViewGroup.LayoutParams params = old.getLayoutParams();
+        mVideoSurfaceWrapper = new TextureViewWrapper(getContext(), mVideoSurfaceRoot);
+        previous.close();
+        mVideoSurfaceRoot.removeView(old);
+        mVideoSurfaceRoot.addView(mVideoSurfaceWrapper.getSurfaceView(), 0, params);
+        mVideoSurfaceWrapper.setSurfaceHolderCallback(mSurfaceCallback);
+    }
+
     /**
      * Adds {@link SurfaceHolder.Callback} to {@link SurfaceView}.
      */
     public void setSurfaceHolderCallback(SurfaceHolder.Callback callback) {
+        mSurfaceCallback = callback;
         if (mVideoSurfaceWrapper != null) {
             mVideoSurfaceWrapper.setSurfaceHolderCallback(callback);
         }
@@ -75,6 +96,9 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
 
     @Override
     public void onDestroyView() {
+        if (mVideoSurfaceRoot != null) mVideoSurfaceRoot.setAspectRatioListener(null);
+        if (mVideoSurfaceWrapper != null) mVideoSurfaceWrapper.close();
+        mSurfaceCallback = null;
         mVideoSurfaceWrapper = null;
         super.onDestroyView();
     }
@@ -107,7 +131,7 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
             return;
         }
 
-        if (mVideoSurfaceWrapper instanceof TextureViewWrapper) {
+        if (mVideoSurfaceWrapper.supportsViewTransform()) {
             mVideoSurfaceRoot.setRotation(angle);
         } else {
             mVideoSurfaceRoot.removeView(mVideoSurfaceWrapper.getSurfaceView());
@@ -126,7 +150,7 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
             return;
         }
 
-        if (mVideoSurfaceWrapper instanceof TextureViewWrapper) {
+        if (mVideoSurfaceWrapper.supportsViewTransform()) {
             mVideoSurfaceRoot.setScaleX(scaleX);
         } else {
             mVideoSurfaceRoot.removeView(mVideoSurfaceWrapper.getSurfaceView());
@@ -139,7 +163,7 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
     }
 
     private void scaleIfNeeded() {
-        if (!(mVideoSurfaceWrapper instanceof TextureViewWrapper)) {
+        if (mVideoSurfaceWrapper == null || !mVideoSurfaceWrapper.supportsViewTransform()) {
             return;
         }
 

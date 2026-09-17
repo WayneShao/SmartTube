@@ -17,6 +17,10 @@ public class GlideCachingModule extends AppGlideModule {
 
     @Override
     public void applyOptions(Context context, GlideBuilder builder) {
+        if (com.liskovsoft.smartyoutubetv2.tv.BuildConfig.RAYNEO_OES
+                && com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeo.isEnabled(context)) {
+            builder.setDefaultRequestOptions(new com.bumptech.glide.request.RequestOptions().disallowHardwareConfig());
+        }
         //if (MyApplication.from(context).isTest())
         //    return; // NOTE: StatFs will crash on robolectric.
 

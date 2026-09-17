@@ -57,6 +57,20 @@ public class RayNeoWindowTest {
         assertNotSame(first, content(activity.getWindow()));
     }
 
+    @Test public void independentVideoSiblingDoesNotWrapStereoAgainOrCaptureOverlays() {
+        activity.setContentView(new View(activity));
+        RayNeoWindow.install(activity);
+        StereoLayout first = content(activity.getWindow());
+        ViewGroup host = (ViewGroup) first.getParent();
+        View video = new View(activity);
+        host.addView(video, 0, new ViewGroup.LayoutParams(-1, -1));
+        RayNeoWindow.install(activity);
+        assertSame(host, first.getParent());
+        assertSame(host, video.getParent());
+        assertEquals(2, host.getChildCount());
+        assertSame(first, RayNeoWindow.overlayRoot(activity));
+    }
+
     @Test public void dialogKeepsButtonsDismissListenerAndRightEyeOutsideCancel() {
         int[] dismisses = {0};
         AlertDialog dialog = new AlertDialog.Builder(activity).setTitle("Title").setMessage("Message")

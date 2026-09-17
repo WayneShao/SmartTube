@@ -72,10 +72,16 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
 
     public static ViewGroup overlayRoot(Activity activity) {
         ViewGroup content = activity.findViewById(android.R.id.content);
-        if (content.getChildCount() > 0 && content.getChildAt(0) instanceof StereoLayout) {
-            return (ViewGroup) content.getChildAt(0);
-        }
+        StereoLayout stereo = stereoChild(content);
+        if (stereo != null) return stereo;
         return (ViewGroup) content.getRootView();
+    }
+
+    private static StereoLayout stereoChild(ViewGroup content) {
+        for (int i = 0; i < content.getChildCount(); i++) {
+            if (content.getChildAt(i) instanceof StereoLayout) return (StereoLayout) content.getChildAt(i);
+        }
+        return null;
     }
 
     public static void install(Dialog dialog) {
@@ -100,7 +106,7 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
     private static void install(Window window, boolean dialog) {
         ViewGroup content = window.findViewById(android.R.id.content);
         if (content == null || content.getChildCount() == 0) return;
-        if (content.getChildAt(0) instanceof StereoLayout) return;
+        if (stereoChild(content) != null) return;
         RayNeoWindow callback = window.getCallback() instanceof RayNeoWindow
                 ? (RayNeoWindow) window.getCallback() : new RayNeoWindow(window);
         callback.input.cancel();

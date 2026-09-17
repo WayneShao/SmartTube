@@ -1,0 +1,4 @@
+<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/playback_controls_fragment"
+    android:name="com.liskovsoft.smartyoutubetv2.tv.validation.LocalPlaybackFragment"
+    android:tag="@string/playback_tag" android:layout_width="match_parent" android:layout_height="match_parent" />

@@ -13,6 +13,22 @@ import android.widget.TextView;
 
 /** One measured content tree, replayed in two clipped eye regions. */
 public final class StereoLayout extends FrameLayout {
+    private boolean bitmapReplay;
+    private android.graphics.Bitmap uiBitmap;
+    private Canvas uiCanvas;
+
+    /** OES playback only: draw the UI once, then reuse its pixels in both eye regions. */
+    public void setBitmapReplay(boolean enabled) {
+        if (bitmapReplay == enabled) return;
+        bitmapReplay = enabled;
+        uiBitmap = null; uiCanvas = null; // HWUI may retain old buffers until its next frame.
+        invalidate();
+    }
+
+    @Override public void onDescendantInvalidated(View child, View target) {
+        super.onDescendantInvalidated(child,target);
+        if (bitmapReplay) invalidate(); // Changes in one logical eye affect both output regions.
+    }
     private float gestureEyeOffset;
     private TextView message;
     private final Runnable hideMessage = this::dismissMessage;
@@ -67,6 +83,7 @@ public final class StereoLayout extends FrameLayout {
 
     @Override protected void onDetachedFromWindow() {
         dismissMessage();
+        uiBitmap = null; uiCanvas = null;
         super.onDetachedFromWindow();
     }
 
@@ -83,6 +100,17 @@ public final class StereoLayout extends FrameLayout {
 
     @Override protected void dispatchDraw(Canvas canvas) {
         int eyeWidth = getWidth() / 2;
+        if (bitmapReplay && eyeWidth > 0 && getHeight() > 0) {
+            if (uiBitmap == null || uiBitmap.getWidth() != eyeWidth || uiBitmap.getHeight() != getHeight()) {
+                uiBitmap = android.graphics.Bitmap.createBitmap(eyeWidth,getHeight(),android.graphics.Bitmap.Config.ARGB_8888);
+                uiCanvas = new Canvas(uiBitmap);
+            }
+            uiBitmap.eraseColor(Color.TRANSPARENT);
+            super.dispatchDraw(uiCanvas);
+            canvas.drawBitmap(uiBitmap,0,0,null);
+            canvas.drawBitmap(uiBitmap,eyeWidth,0,null);
+            return;
+        }
         for (int eye = 0; eye < 2; eye++) {
             int save = canvas.save();
             canvas.translate(eye * eyeWidth, 0);
