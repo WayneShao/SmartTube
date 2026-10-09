@@ -1,8 +1,8 @@
 # SmartTube RayNeo X3 Pro — first port
 
 Based on SmartTube 32.64 (`f18f785142dd781681bfd613e95c22fd327f27d1`). Branch: `rayneo/x3pro`.
-Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
-version `32.64-rayneo.8`. This package can coexist with official SmartTube.
+Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube`,
+version `32.64-rayneo.9`. This package can coexist with official SmartTube.
 
 ## Display and input
 
