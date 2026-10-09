@@ -1,8 +1,8 @@
 # SmartTube RayNeo X3 Pro — first port
 
-Based on SmartTube 32.47 (`249bc833f`). Branch: `rayneo/x3pro`.
+Based on SmartTube 32.64 (`f18f785142dd781681bfd613e95c22fd327f27d1`). Branch: `rayneo/x3pro`.
 Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
-version `32.64-rayneo.7`. This package can coexist with official SmartTube.
+version `32.64-rayneo.8`. This package can coexist with official SmartTube.
 
 ## Display and input
 
@@ -19,7 +19,8 @@ on new frames. Tunneling is disabled on this path.
 - The existing list/grid focus system scrolls off-screen items into view.
 - Single tap confirms the focused control after the double-tap interval.
 - Double tap returns within the active window without a preceding confirmation.
-- Long press delegates MENU to the current focused item.
+- Two-finger tap delegates MENU once after both fingers lift, bound to the current window and original focus. Movement, a third finger, cancellation or focus loss cancels it.
+- Long press remains an additional MENU gesture.
 - Sidebar-to-content navigation accepts Leanback fragment containers and preserves
   their normal descendant-focus/header-transition behavior.
 - The exit confirmation is a nonfocusable, two-second message inside the stereo

@@ -16,6 +16,9 @@ public final class TempleInput {
     private final Runnable captureTarget;
     private final float slop;
     private boolean down, moved, pendingTap, secondTap, hovering, suppressed;
+    private boolean twoFinger;
+    private int firstPointerId = -1, secondPointerId = -1, liftedPointerId = -1;
+    private float secondX, secondY;
     private int deviceId = Integer.MIN_VALUE;
     private int lastAction = -1;
     private long lastEventTime = -1;
@@ -35,8 +38,8 @@ public final class TempleInput {
         String name = device == null ? "" : device.getName();
         if (!"cyttsp5_mt".equals(name) && !"cyttsp6_mt".equals(name)) return false;
         if (deviceId != event.getDeviceId()) { cancel(); deviceId = event.getDeviceId(); }
-        if (lastAction == event.getActionMasked() && lastEventTime == event.getEventTime()) return true;
-        lastAction = event.getActionMasked(); lastEventTime = event.getEventTime();
+        if (lastAction == event.getAction() && lastEventTime == event.getEventTime()) return true;
+        lastAction = event.getAction(); lastEventTime = event.getEventTime();
         if (android.util.Log.isLoggable("SmartTubeRayNeoInput", android.util.Log.DEBUG)) {
             android.util.Log.d("SmartTubeRayNeoInput", "device=" + name + " action=" + lastAction
                     + " x=" + event.getX() + " y=" + event.getY());
@@ -47,15 +50,32 @@ public final class TempleInput {
 
     void handleTouchpad(MotionEvent event) {
         int action = event.getActionMasked();
-        if (action == MotionEvent.ACTION_CANCEL || event.getPointerCount() != 1 || action == MotionEvent.ACTION_POINTER_UP) {
-            int currentDevice = deviceId;
-            cancel(); deviceId = currentDevice; suppressed = true; return;
-        }
-        if (action == MotionEvent.ACTION_DOWN) suppressed = false;
+        if (action == MotionEvent.ACTION_CANCEL) { suppress(); return; }
+        if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_HOVER_ENTER) suppressed = false;
         if (suppressed) {
             if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_HOVER_EXIT) suppressed = false;
             return;
         }
+        if (twoFinger) {
+            if (action == MotionEvent.ACTION_POINTER_DOWN) { suppress(); return; }
+            handleTwoFinger(event);
+            return;
+        }
+        if (action == MotionEvent.ACTION_POINTER_DOWN && event.getPointerCount() == 2 && down && !moved
+                && event.getEventTime() - downTime < ViewConfiguration.getLongPressTimeout()) {
+            int first = event.findPointerIndex(firstPointerId);
+            int second = event.getActionIndex();
+            if (first < 0 || first == second) { suppress(); return; }
+            handler.removeCallbacks(confirm);
+            pendingTap = secondTap = hovering = false;
+            twoFinger = true;
+            secondPointerId = event.getPointerId(second);
+            secondX = event.getX(second); secondY = event.getY(second);
+            handleTwoFinger(event);
+            return;
+        }
+        if (event.getPointerCount() != 1 || action == MotionEvent.ACTION_POINTER_UP
+                || action == MotionEvent.ACTION_POINTER_DOWN) { suppress(); return; }
         if (!down && (action == MotionEvent.ACTION_HOVER_ENTER || action == MotionEvent.ACTION_HOVER_MOVE)) {
             if (!hovering) { hovering = true; startX = event.getX(); startY = event.getY(); }
             lastX = event.getX(); lastY = event.getY();
@@ -73,6 +93,7 @@ public final class TempleInput {
             pendingTap = false; down = true; moved = false; hovering = false;
             startX = lastX = event.getX(); startY = lastY = event.getY();
             downTime = event.getEventTime();
+            firstPointerId = event.getPointerId(0);
             captureTarget.run();
         } else if (down && (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_HOVER_MOVE)) {
             lastX = event.getX(); lastY = event.getY();
@@ -91,6 +112,44 @@ public final class TempleInput {
         }
     }
 
+    private void handleTwoFinger(MotionEvent event) {
+        int action = event.getActionMasked();
+        int expected = liftedPointerId == -1 ? 2 : 1;
+        if (event.getPointerCount() != expected
+                || event.getEventTime() - downTime >= ViewConfiguration.getLongPressTimeout()) {
+            suppress(); return;
+        }
+        for (int i = 0; i < event.getPointerCount(); i++) {
+            int id = event.getPointerId(i);
+            if ((id != firstPointerId && id != secondPointerId) || id == liftedPointerId) { suppress(); return; }
+            float x = id == firstPointerId ? startX : secondX;
+            float y = id == firstPointerId ? startY : secondY;
+            for (int h = 0; h < event.getHistorySize(); h++) {
+                if (Math.max(Math.abs(event.getHistoricalX(i, h) - x),
+                        Math.abs(event.getHistoricalY(i, h) - y)) > slop) { suppress(); return; }
+            }
+            if (Math.max(Math.abs(event.getX(i) - x), Math.abs(event.getY(i) - y)) > slop) {
+                suppress(); return;
+            }
+        }
+        if (action == MotionEvent.ACTION_POINTER_UP) {
+            if (liftedPointerId != -1) { suppress(); return; }
+            liftedPointerId = event.getPointerId(event.getActionIndex());
+        } else if (action == MotionEvent.ACTION_UP) {
+            boolean complete = liftedPointerId != -1;
+            suppress(); // Consume trailing releases before MENU can change the active window.
+            if (complete) actions.onAction(KeyEvent.KEYCODE_MENU);
+        }
+    }
+
+    private void suppress() {
+        int currentDevice = deviceId;
+        int action = lastAction;
+        long time = lastEventTime;
+        cancel();
+        deviceId = currentDevice; lastAction = action; lastEventTime = time; suppressed = true;
+    }
+
     private void emitDirection(float dx, float dy) {
         if (Math.max(Math.abs(dx), Math.abs(dy)) <= slop) return;
         handler.removeCallbacks(confirm); pendingTap = false;
@@ -101,7 +160,8 @@ public final class TempleInput {
 
     public void cancel() {
         handler.removeCallbacks(confirm);
-        down = moved = pendingTap = secondTap = hovering = suppressed = false;
+        down = moved = pendingTap = secondTap = hovering = suppressed = twoFinger = false;
+        firstPointerId = secondPointerId = liftedPointerId = -1;
         deviceId = Integer.MIN_VALUE; lastAction = -1; lastEventTime = -1;
     }
 }

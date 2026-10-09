@@ -29,6 +29,97 @@ public class TempleInputTest {
         event.recycle();
     }
 
+    private void pointers(long time, int action, int[] ids, float... xs) {
+        MotionEvent.PointerProperties[] properties = new MotionEvent.PointerProperties[ids.length];
+        MotionEvent.PointerCoords[] coords = new MotionEvent.PointerCoords[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            properties[i] = new MotionEvent.PointerProperties(); properties[i].id = ids[i];
+            properties[i].toolType = MotionEvent.TOOL_TYPE_FINGER;
+            coords[i] = new MotionEvent.PointerCoords(); coords[i].x = xs[i]; coords[i].y = 100;
+            coords[i].pressure = 1; coords[i].size = 1;
+        }
+        MotionEvent e = MotionEvent.obtain(1,time,action,ids.length,properties,coords,0,0,1,1,0,0,
+                android.view.InputDevice.SOURCE_TOUCHPAD,0);
+        input.handleTouchpad(e); e.recycle();
+    }
+
+    private void beginPair() {
+        pointers(1,MotionEvent.ACTION_DOWN,new int[]{4},100);
+        pointers(30,MotionEvent.ACTION_POINTER_DOWN | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT),new int[]{4,9},100,200);
+    }
+
+    @Test public void twoFingerTapWaitsForBothReleasesAndEmitsOneMenu() {
+        beginPair();
+        pointers(70,MotionEvent.ACTION_POINTER_UP,new int[]{4,9},100,200);
+        assertTrue(keys.isEmpty());
+        pointers(100,MotionEvent.ACTION_UP,new int[]{9},200);
+        pointers(101,MotionEvent.ACTION_BUTTON_RELEASE,new int[]{9},200);
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500));
+        assertEquals(java.util.Collections.singletonList(KeyEvent.KEYCODE_MENU),keys);
+    }
+
+    @Test public void pointerOrderAndReverseLiftOrderDoNotChangeMenu() {
+        beginPair();
+        pointers(60,MotionEvent.ACTION_MOVE,new int[]{9,4},201,101);
+        pointers(70,MotionEvent.ACTION_POINTER_UP,new int[]{9,4},201,101);
+        pointers(90,MotionEvent.ACTION_UP,new int[]{4},101);
+        assertEquals(java.util.Collections.singletonList(KeyEvent.KEYCODE_MENU),keys);
+    }
+
+    @Test public void twoFingerSwipeAndThirdFingerAreSuppressed() {
+        beginPair();
+        pointers(50,MotionEvent.ACTION_MOVE,new int[]{4,9},100,250);
+        pointers(70,MotionEvent.ACTION_POINTER_UP,new int[]{4,9},100,200);
+        pointers(90,MotionEvent.ACTION_UP,new int[]{9},200);
+        assertTrue(keys.isEmpty()); input.cancel();
+        beginPair();
+        pointers(50,MotionEvent.ACTION_POINTER_DOWN | (2 << MotionEvent.ACTION_POINTER_INDEX_SHIFT),new int[]{4,9,12},100,200,300);
+        pointers(70,MotionEvent.ACTION_POINTER_UP,new int[]{4,9},100,200);
+        pointers(90,MotionEvent.ACTION_UP,new int[]{9},200);
+        assertTrue(keys.isEmpty());
+    }
+
+    @Test public void twoFingerCancelWindowLossAndLongHoldDoNotEmit() {
+        beginPair(); pointers(50,MotionEvent.ACTION_CANCEL,new int[]{4,9},100,200);
+        pointers(90,MotionEvent.ACTION_UP,new int[]{9},200);
+        assertTrue(keys.isEmpty()); input.cancel();
+        beginPair(); input.cancel();
+        pointers(70,MotionEvent.ACTION_POINTER_UP,new int[]{4,9},100,200);
+        pointers(90,MotionEvent.ACTION_UP,new int[]{9},200);
+        assertTrue(keys.isEmpty()); input.cancel();
+        beginPair(); pointers(800,MotionEvent.ACTION_POINTER_UP,new int[]{4,9},100,200);
+        pointers(900,MotionEvent.ACTION_UP,new int[]{9},200);
+        assertTrue(keys.isEmpty());
+    }
+
+    @Test public void pairCancelsPendingSingleTapAndNextSingleTapStillWorks() {
+        event(1,1,MotionEvent.ACTION_DOWN,100,100);
+        event(1,20,MotionEvent.ACTION_UP,100,100);
+        pointers(100,MotionEvent.ACTION_DOWN,new int[]{4},100);
+        pointers(130,MotionEvent.ACTION_POINTER_DOWN | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT),new int[]{4,9},100,200);
+        pointers(170,MotionEvent.ACTION_POINTER_UP,new int[]{4,9},100,200);
+        pointers(190,MotionEvent.ACTION_UP,new int[]{9},200);
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500));
+        assertEquals(java.util.Collections.singletonList(KeyEvent.KEYCODE_MENU),keys);
+        event(1000,1000,MotionEvent.ACTION_DOWN,100,100);
+        event(1000,1050,MotionEvent.ACTION_UP,100,100);
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500));
+        assertEquals(java.util.Arrays.asList(KeyEvent.KEYCODE_MENU,KeyEvent.KEYCODE_DPAD_CENTER),keys);
+    }
+
+    @Test public void hoverNavigationResumesAfterTwoFingerMenu() {
+        beginPair();
+        pointers(70,MotionEvent.ACTION_POINTER_UP,new int[]{4,9},100,200);
+        pointers(90,MotionEvent.ACTION_UP,new int[]{9},200);
+        event(0,100,MotionEvent.ACTION_HOVER_MOVE,200,100);
+        event(0,110,MotionEvent.ACTION_HOVER_EXIT,200,100);
+        assertEquals(java.util.Collections.singletonList(KeyEvent.KEYCODE_MENU),keys);
+        event(0,200,MotionEvent.ACTION_HOVER_ENTER,100,100);
+        event(0,220,MotionEvent.ACTION_HOVER_MOVE,200,100);
+        event(0,250,MotionEvent.ACTION_HOVER_EXIT,200,100);
+        assertEquals(java.util.Arrays.asList(KeyEvent.KEYCODE_MENU,KeyEvent.KEYCODE_DPAD_RIGHT),keys);
+    }
+
     @Test public void oneTapConfirmsOnlyOnceAfterDoubleTapWindow() {
         event(1, 1, MotionEvent.ACTION_DOWN, 100, 100);
         event(1, 50, MotionEvent.ACTION_UP, 100, 100);
