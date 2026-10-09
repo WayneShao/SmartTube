@@ -2,7 +2,7 @@
 
 Based on SmartTube 32.47 (`249bc833f`). Branch: `rayneo/x3pro`.
 Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube RayNeo`,
-version `32.47-rayneo.6`. This package can coexist with official SmartTube.
+version `32.64-rayneo.7`. This package can coexist with official SmartTube.
 
 ## Display and input
 
@@ -67,7 +67,7 @@ keyPassword=YOUR_LOCAL_PASSWORD
 
 `storeFile` is resolved relative to `smarttubetv/`. Keystores, properties, APKs and
 local artifacts are ignored by Git. Keep the signing material for future updates.
-Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v6/`.
+Omit `-DebugApk` for release. Output is copied into `releases/rayneo-v7/`.
 
 ## Verification boundary
 

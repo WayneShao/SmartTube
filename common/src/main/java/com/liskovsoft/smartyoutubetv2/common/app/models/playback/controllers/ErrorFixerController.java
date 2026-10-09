@@ -2,6 +2,7 @@ package com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers;
 
 import android.annotation.SuppressLint;
 
+import com.google.android.exoplayer2.source.sabr.parser.exceptions.ReloadPlayerResponseError;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
@@ -22,8 +23,11 @@ import java.util.List;
 public class ErrorFixerController extends BasePlayerController implements OnLongBuffering {
     private static final String TAG = ErrorFixerController.class.getSimpleName();
     private static final long STREAM_END_THRESHOLD_MS = 180_000;
+    private static final int MAX_RELOAD_PLAYER_RESPONSE_ATTEMPTS = 3;
     private final BufferingDetector mBufferingDetector = new BufferingDetector(this);
     private VideoLoaderController mVideoLoaderController;
+    private String mReloadPlayerResponseVideoId;
+    private int mReloadPlayerResponseAttempts;
 
     @Override
     public void onInit() {
@@ -50,14 +54,13 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
             disableSubtitles();
             mVideoLoaderController.reloadVideo();
         } else if (!mBufferingDetector.isPlayable()) {
-            boolean isGoogleDns = getPlayerTweaksData().getPlayerDataSource() == PlayerTweaksData.PLAYER_DATA_SOURCE_OKHTTP
-                    && getPlayerTweaksData().getPreferredDnsType() == PlayerTweaksData.DNS_TYPE_GOOGLE;
-            if (!isGoogleDns && !getPlayerTweaksData().isNetworkErrorFixingDisabled()) {
-                // Wrong DNS resolution could cause hanging at start
+            if (getPlayerTweaksData().getPlayerDataSource() != PlayerTweaksData.PLAYER_DATA_SOURCE_OKHTTP
+                && getPlayerTweaksData().getPreferredDnsType() != PlayerTweaksData.DNS_TYPE_SYSTEM
+                && !getPlayerTweaksData().isNetworkErrorFixingDisabled()) {
+                // Wrong DNS resolving could cause hanging at start
                 // Do switch to only engine that respects custom DNS settings
-                MessageHelpers.showLongMessage(getContext(), "Fixing wrong DNS resolution...");
+                MessageHelpers.showLongMessage(getContext(), "Fixing wrong DNS resolving...");
                 getPlayerTweaksData().setPlayerDataSource(PlayerTweaksData.PLAYER_DATA_SOURCE_OKHTTP);
-                getPlayerTweaksData().setPreferredDnsType(PlayerTweaksData.DNS_TYPE_GOOGLE);
                 mVideoLoaderController.restartEngine();
             } else {
                 // Also, some clients like ANDROID_REEL may just hang at start
@@ -92,6 +95,7 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
     @Override
     public void onPlay() {
         mBufferingDetector.onStopBuffering();
+        mReloadPlayerResponseAttempts = 0;
     }
 
     @Override
@@ -127,7 +131,52 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
             return;
         }
 
+        if (applyReloadPlayerResponseAction(error)) {
+            return;
+        }
+
         applyEngineErrorAction(type, rendererIndex, error);
+    }
+
+    /**
+     * SABR server sent ReloadPlayerResponse. It won't send any media until the player response is re-fetched with the token.
+     */
+    private boolean applyReloadPlayerResponseAction(Throwable error) {
+        ReloadPlayerResponseError reloadError = findReloadPlayerResponseError(error);
+        Video video = getVideo();
+
+        if (reloadError == null || video == null) {
+            return false;
+        }
+
+        if (!Helpers.equals(video.videoId, mReloadPlayerResponseVideoId)) {
+            mReloadPlayerResponseVideoId = video.videoId;
+            mReloadPlayerResponseAttempts = 0;
+        }
+
+        // Reload doesn't help. Fallback to the common error handling (switch the client).
+        if (++mReloadPlayerResponseAttempts > MAX_RELOAD_PLAYER_RESPONSE_ATTEMPTS) {
+            return false;
+        }
+
+        Log.e(TAG, "SABR requested player response reload. Attempt: %s", mReloadPlayerResponseAttempts);
+
+        YouTubeServiceManager.instance().reloadPlayerResponse(video.videoId, reloadError.reloadPlaybackToken);
+        mVideoLoaderController.reloadVideo();
+
+        return true;
+    }
+
+    private static ReloadPlayerResponseError findReloadPlayerResponseError(Throwable error) {
+        while (error != null) {
+            if (error instanceof ReloadPlayerResponseError) {
+                return (ReloadPlayerResponseError) error;
+            }
+
+            error = error.getCause();
+        }
+
+        return null;
     }
 
     private void applyEngineErrorAction(int type, int rendererIndex, Throwable error) {
@@ -139,10 +188,7 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
 
         if (Helpers.startsWithAny(errorContent, "Unable to connect to")) {
             // No internet connection or WRONG DATE on the device
-            // Recently this message starting to show for other reasons
-            //YouTubeServiceManager.instance().applyNoPlaybackFix(); // ?
-            //switchNextEngine(); // ?
-            //restartEngine = false;
+            // Recently this message starting to show for other unknown reasons
             if (!getPlayerTweaksData().isNetworkErrorFixingDisabled()) {
                 switchNextEngine();
             }
@@ -153,8 +199,7 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
             } else if (getPlayerData().getVideoBufferType() == PlayerData.BUFFER_HIGH || getPlayerData().getVideoBufferType() == PlayerData.BUFFER_HIGHEST) {
                 getPlayerData().setVideoBufferType(PlayerData.BUFFER_MEDIUM);
             } else {
-                getPlayerTweaksData().setSectionPlaylistEnabled(false);
-                restartEngine = false;
+                lowerVideoQuality(); // NOTE: restart engine is required after lower the quality
             }
         } else if (Helpers.containsAny(errorContent, "Exception in CronetUrlRequest") && !getPlayerTweaksData().isNetworkErrorFixingDisabled()) {
             if (getVideo() != null && !getVideo().isLive) { // Finished live stream may provoke errors in Cronet
@@ -176,16 +221,6 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
             // "Unable to connect to", "Invalid NAL length", "Response code: 421",
             // "Response code: 404", "Response code: 429", "Invalid integer size",
             // "Unexpected ArrayIndexOutOfBoundsException", "Unexpected IndexOutOfBoundsException"
-
-            //if (Helpers.startsWithAny(errorContent, "Response code: 403")) {
-            //    YouTubeServiceManager.instance().applyNoPlaybackFix();
-            //} else if (isSubtitlesEnabled()) {
-            //    disableSubtitles(); // Response code: 429
-            //} else if (getPlayerTweaksData().isHighBitrateFormatsEnabled()) {
-            //    getPlayerTweaksData().setHighBitrateFormatsEnabled(false); // Response code: 429
-            //} else {
-            //    YouTubeServiceManager.instance().applyNoPlaybackFix(); // Response code: 403
-            //}
 
             restartEngine = false;
             showMessage = false;
@@ -219,8 +254,13 @@ public class ErrorFixerController extends BasePlayerController implements OnLong
             getPlayerData().setFormat(FormatItem.AUDIO_HQ_MP4A);
             restartEngine = false;
         } else if (type == PlayerEventListener.ERROR_TYPE_UNEXPECTED) {
-            // IllegalStateException: Buffer too small (5242880 < 7208383)
-            if (Helpers.startsWithAny(errorContent, "Buffer too small", "Invalid to call at Released state; only valid in executing state")) {
+            if (error instanceof NullPointerException) {
+                // SABR extractor throws NPE on subtitle error
+                // NOTE: the engine should be restarted
+                disableSubtitles();
+            } else if (Helpers.startsWithAny(errorContent,
+                    "Buffer too small", "Invalid to call at Released state; only valid in executing state")) {
+                // IllegalStateException: Buffer too small (5242880 < 7208383)
                 // NOTE: The bug. Avoid calling reloadVideo() after lowering the quality.
                 // This will change current format to 'Disabled'. Do restartEngine() instead.
                 lowerVideoQuality();
