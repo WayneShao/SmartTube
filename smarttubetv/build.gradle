@@ -60,11 +60,11 @@ android {
         applicationId "app.smarttube"
         minSdkVersion project.properties.minSdkVersion
         targetSdkVersion project.properties.targetSdkVersion
-        versionCode 2454
-        versionName "32.64"
+        versionCode 2458
+        versionName "32.68"
         if (rayNeoBuild) {
-            versionNameSuffix "-rayneo.9"
-            versionCode 2490
+            versionNameSuffix "-rayneo.10"
+            versionCode 2500
         }
         manifestPlaceholders = [rayneoApp: rayNeoBuild ? "true" : "false"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -266,6 +266,8 @@ dependencies {
 
     // ByeByeDPI fix
     implementation 'org.conscrypt:conscrypt-android:' + conscryptVersion
+
+    implementation 'androidx.work:work-runtime:' + workVersion
 }
 
 // Separate component benchmark APK; excluded from normal builds.
