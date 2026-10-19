@@ -1,8 +1,8 @@
 # SmartTube RayNeo X3 Pro — first port
 
-Based on SmartTube 32.64 (`f18f785142dd781681bfd613e95c22fd327f27d1`). Branch: `rayneo/x3pro`.
+Based on SmartTube 32.68 (`ffa16426ea3c7c82077e0f00228818b85f373588`). Branch: `rayneo/x3pro`.
 Build with `-Prayneo` for package `app.smarttube.rayneo`, label `SmartTube`,
-version `32.64-rayneo.9`. This package can coexist with official SmartTube.
+version `32.68-rayneo.10`. This package can coexist with official SmartTube.
 
 ## Display and input
 
@@ -112,3 +112,7 @@ from current ListView/Leanback selection and surviving content regions after UI
 changes. It observes direction outcomes, respects pending layout/scroll and header
 transitions, and never replays a consumed key during recovery. See
 [recovery validation](VALIDATION-v6.md) for the tested cases and device boundary.
+
+## Embedded input
+
+See [integration, dependency and acceptance record](embedded-input.md) and [shared module defect report](shared-input-report.md). The keyboard window owns its voice/clear gestures; ordinary windows keep MENU.

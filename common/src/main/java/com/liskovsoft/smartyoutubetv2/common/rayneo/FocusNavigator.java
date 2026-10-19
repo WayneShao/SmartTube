@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 /** Restores per-window focus and supplies the normal ViewRoot DPAD fallback for local dispatch. */
 final class FocusNavigator implements ViewTreeObserver.OnGlobalFocusChangeListener, ViewTreeObserver.OnPreDrawListener, ViewTreeObserver.OnGlobalLayoutListener {
     interface Dispatch { boolean key(KeyEvent event); }
-    private final StereoLayout root;
+    private final android.view.ViewGroup root;
     private final Dispatch dispatch;
     private final FocusRecovery recovery;
     private boolean recoveryRequested;
@@ -20,7 +20,7 @@ final class FocusNavigator implements ViewTreeObserver.OnGlobalFocusChangeListen
     private Runnable pending;
     private FocusTarget pendingTarget;
 
-    FocusNavigator(StereoLayout root, Dispatch dispatch) {
+    FocusNavigator(android.view.ViewGroup root, Dispatch dispatch) {
         this.root = root;
         this.dispatch = dispatch;
         recovery = new FocusRecovery(root);

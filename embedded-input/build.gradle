@@ -1,0 +1,24 @@
+apply plugin: 'com.android.library'
+android {
+    compileSdkVersion 34
+    defaultConfig { minSdkVersion 17 }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    sourceSets.main {
+        java.srcDir 'build/generated/keyboard/java'
+        assets.srcDir 'build/generated/keyboard/assets'
+        jniLibs.srcDir 'build/generated/keyboard/jniLibs'
+    }
+    testOptions.unitTests.includeAndroidResources = true
+}
+tasks.register('prepareKeyboard', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'python', 'scripts/prepare_keyboard.py'
+}
+preBuild.dependsOn prepareKeyboard
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.12.2'
+}

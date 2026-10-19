@@ -24,6 +24,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Submodule initialization failed.' }
     $tasks = @()
     if (-not $SkipTests) {
+        $tasks += ':embedded-input:testDebugUnitTest'
         $tasks += ':common:testStfdroidDebugUnitTest'
         $tasks += ':smarttubetv:testStfdroidDebugUnitTest'
     }
@@ -37,7 +38,7 @@ try {
     $apks = @(Get-Item (Join-Path "smarttubetv/build/outputs/apk/stfdroid/$buildType" $arm64[0].outputFile))
     if ($apks.Count -ne 1) { throw 'Expected exactly one arm64 APK.' }
     $apk = $apks[0]
-    $output = New-Item -ItemType Directory -Force 'releases/rayneo-v9'
+    $output = New-Item -ItemType Directory -Force 'releases/rayneo-v10'
     Copy-Item $apk.FullName $output.FullName -Force
     Get-FileHash (Join-Path $output.FullName $apk.Name) -Algorithm SHA256
 } finally { Pop-Location }

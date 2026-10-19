@@ -23,3 +23,5 @@ apply from: new File(gradle.ext.exoplayerRoot, 'core_settings.gradle')
 // apply from: new File(gradle.ext.exoplayerRoot, 'core_settings.gradle')
 
 
+
+include ':embedded-input'

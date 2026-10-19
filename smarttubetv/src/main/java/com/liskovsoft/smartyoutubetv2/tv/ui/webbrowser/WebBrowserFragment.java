@@ -43,6 +43,29 @@ public class WebBrowserFragment extends Fragment implements WebBrowserView {
         super.onViewCreated(view, savedInstanceState);
 
         mWebView = (WebView) view.findViewById(R.id.webview);
+        if (com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeo.isEnabled(requireContext())) {
+            WebView original = mWebView;
+            ViewGroup parent = (ViewGroup) original.getParent();
+            int index = parent.indexOfChild(original);
+            mWebView = new io.github.wayneshao.rayneo.ime.EmbeddedWebView(requireContext(),
+                    com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoKeyboard.host());
+            mWebView.setId(original.getId());
+            ViewGroup.LayoutParams params = original.getLayoutParams();
+            parent.removeView(original); original.destroy(); parent.addView(mWebView, index, params);
+            mWebView.setWebViewClient(new android.webkit.WebViewClient() {
+                // The original view had no client: clicked navigation opened an external handler.
+                @Override public boolean shouldOverrideUrlLoading(WebView web, String url) {
+                    try {
+                        web.getContext().startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)));
+                        return true;
+                    } catch (android.content.ActivityNotFoundException unavailable) { return false; }
+                }
+                @Override public void onPageFinished(WebView web, String url) {
+                    super.onPageFinished(web, url);
+                    io.github.wayneshao.rayneo.ime.EmbeddedWebView.pageFinished(web);
+                }
+            });
+        }
         mWebView.setBackgroundColor(Color.TRANSPARENT);
         WebSettings webSettings = mWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -57,6 +80,13 @@ public class WebBrowserFragment extends Fragment implements WebBrowserView {
         super.onActivityCreated(savedInstanceState);
 
         mWebBrowserPresenter.onViewInitialized();
+    }
+
+    @Override public void onDestroyView() {
+        if (mWebView instanceof io.github.wayneshao.rayneo.ime.EmbeddedWebView) {
+            mWebView.destroy(); mWebView = null;
+        }
+        super.onDestroyView();
     }
 
     @Override

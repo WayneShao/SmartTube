@@ -1,0 +1,1 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.wayneshao.rayneo.ime"><uses-permission android:name="android.permission.RECORD_AUDIO" /></manifest>

@@ -1,0 +1,109 @@
+--- a/src/embedded-input/java/io/github/wayneshao/rayneo/ime/EditorTarget.java
++++ b/src/embedded-input/java/io/github/wayneshao/rayneo/ime/EditorTarget.java
+@@ -15,5 +15,6 @@
+     void clear();
+     void move(int direction);
+     void submit();
++    default void cancel() { }
+     default void observe(Runnable changed) { }
+ }
+--- a/src/embedded-input/java/io/github/wayneshao/rayneo/ime/EmbeddedInput.java
++++ b/src/embedded-input/java/io/github/wayneshao/rayneo/ime/EmbeddedInput.java
+@@ -21,8 +21,18 @@
+         return dialog instanceof KeyboardDialog && ((KeyboardDialog) dialog).physicalKey(event);
+     }
+     public static boolean show(EditorTarget target, Host host) {
++        if (android.os.Build.VERSION.SDK_INT < 23) return false;
+         View owner = target.owner();
+         if (owner == null || !target.valid()) return false;
++        Context context = owner.getContext();
++        while (context instanceof android.content.ContextWrapper && !(context instanceof android.app.Activity)) {
++            Context base = ((android.content.ContextWrapper) context).getBaseContext();
++            if (base == context) break;
++            context = base;
++        }
++        if (!(context instanceof android.app.Activity)) return false;
++        android.app.Activity activity = (android.app.Activity) context;
++        if (activity.isFinishing() || activity.isDestroyed()) return false;
+         View root = owner.getRootView();
+         WeakReference<KeyboardDialog> ref = WINDOWS.get(root);
+         KeyboardDialog old = ref == null ? null : ref.get();
+@@ -32,8 +42,26 @@
+         }
+         KeyboardDialog dialog = new KeyboardDialog(owner.getContext(), target, host);
+         WINDOWS.put(root, new WeakReference<>(dialog));
+-        dialog.show();
+-        return true;
++        try {
++            dialog.show();
++            return true;
++        } catch (android.view.WindowManager.BadTokenException | android.view.WindowManager.InvalidDisplayException unavailable) {
++            WeakReference<KeyboardDialog> current = WINDOWS.get(root);
++            if (current != null && current.get() == dialog) WINDOWS.remove(root);
++            dialog.dismiss();
++            return false;
++        }
++    }
++    public static boolean isShowing(View owner) {
++        WeakReference<KeyboardDialog> ref = WINDOWS.get(owner.getRootView());
++        KeyboardDialog dialog = ref == null ? null : ref.get();
++        return dialog != null && dialog.isShowing() && dialog.owns(owner);
++    }
++    /** A host hide request applies to the editor in the requesting window, not another window. */
++    public static void closeWindow(View view) {
++        WeakReference<KeyboardDialog> ref = WINDOWS.get(view.getRootView());
++        KeyboardDialog dialog = ref == null ? null : ref.get();
++        if (dialog != null) dialog.dismiss();
+     }
+     public static void close(View owner) {
+         WeakReference<KeyboardDialog> ref = WINDOWS.get(owner.getRootView());
+--- a/src/embedded-input/java/io/github/wayneshao/rayneo/ime/EmbeddedWebView.java
++++ b/src/embedded-input/java/io/github/wayneshao/rayneo/ime/EmbeddedWebView.java
+@@ -34,7 +34,7 @@
+                 + "function focus(e){var node=e.target;if(!eligible(node))return;quiet(node);if(target!==node){target=node;serial++;}"
+                 + "var s=window.getSelection();range=node.isContentEditable&&s.rangeCount?s.getRangeAt(0).cloneRange():null;bridge.open(JSON.stringify(data()));}"
+                 + "function mutate(id,op,value){if(id!==serial||!target||!target.isConnected)return null;"
+-                + "if(op==='submit'){target.dispatchEvent(new Event('change',{bubbles:true}));target.blur();return data();}"
++                + "if(op==='submit'){target.dispatchEvent(new Event('change',{bubbles:true}));var result=data();var allowed=target.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true,cancelable:true}));target.dispatchEvent(new KeyboardEvent('keyup',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true}));if(allowed&&target.form&&target.tagName!=='TEXTAREA'&&target.form.requestSubmit)target.form.requestSubmit();target.blur();return result;}"
+                 + "if(op==='clear'&&target.isContentEditable){var s=window.getSelection(),r=document.createRange();r.selectNodeContents(target);s.removeAllRanges();s.addRange(r);document.execCommand('delete',false,null);if(s.rangeCount)range=s.getRangeAt(0).cloneRange();return data();}"
+                 + "if(target.isContentEditable){var s=window.getSelection();if(range){s.removeAllRanges();s.addRange(range);}"
+                 + "if(op==='insert')document.execCommand('insertText',false,value);else if(op==='delete')document.execCommand('delete',false,null);"
+--- a/src/embedded-input/java/io/github/wayneshao/rayneo/ime/KeyboardDialog.java
++++ b/src/embedded-input/java/io/github/wayneshao/rayneo/ime/KeyboardDialog.java
+@@ -87,7 +87,7 @@
+         modeButton = button(controls, "英文", () -> changeMode(false), 1);
+         button(controls, "123 / 符号", () -> changeMode(true), 1.6f);
+         voiceButton = button(controls, "语音", this::voice, 1);
+-        button(controls, "收起", this::dismiss, 1);
++        button(controls, "收起", this::cancelEditing, 1);
+         button(controls, "完成 / 搜索", this::submit, 1.8f);
+         setContentView(surface);
+         labels(); refreshPreview();
+@@ -271,6 +271,12 @@
+         super.onWindowFocusChanged(focused);
+         if (!focused) { if (gestures != null) gestures.cancel(); cancelVoice(); }
+     }
++    @Override public void onBackPressed() { cancelEditing(); }
++    private void cancelEditing() {
++        if (closed) return;
++        dismiss();
++        if (target.valid()) target.cancel();
++    }
+     @Override public void dismiss() {
+         if (!closed) {
+             closed = true;
+--- a/src/embedded-input/java/io/github/wayneshao/rayneo/ime/NativeEditor.java
++++ b/src/embedded-input/java/io/github/wayneshao/rayneo/ime/NativeEditor.java
+@@ -63,6 +63,12 @@
+         if (direction > 0 && cursor < text.length()) cursor = Character.offsetByCodePoints(text, cursor, 1);
+         Selection.setSelection(text, cursor);
+     }
++    public void cancel() {
++        EditText e = reference.get(); if (e == null || !valid()) return;
++        long now = android.os.SystemClock.uptimeMillis();
++        e.dispatchKeyEventPreIme(new android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_BACK, 0));
++        e.dispatchKeyEventPreIme(new android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_BACK, 0));
++    }
+     public void submit() {
+         EditText e = reference.get(); if (e == null) return;
+         int action = e.getImeOptions() & EditorInfo.IME_MASK_ACTION;

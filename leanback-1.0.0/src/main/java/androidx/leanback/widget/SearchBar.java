@@ -502,6 +502,7 @@ public class SearchBar extends RelativeLayout {
     }
 
     void hideNativeKeyboard() {
+        if (com.liskovsoft.sharedutils.helpers.Helpers.dismissKeyboard(mSearchTextEditor)) return;
         mInputMethodManager.hideSoftInputFromWindow(mSearchTextEditor.getWindowToken(),
                 InputMethodManager.RESULT_UNCHANGED_SHOWN);
     }
@@ -511,6 +512,7 @@ public class SearchBar extends RelativeLayout {
             @Override
             public void run() {
                 mSearchTextEditor.requestFocusFromTouch();
+                if (com.liskovsoft.sharedutils.helpers.Helpers.presentKeyboard(mSearchTextEditor)) return;
                 mSearchTextEditor.dispatchTouchEvent(MotionEvent.obtain(SystemClock.uptimeMillis(),
                         SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN,
                         mSearchTextEditor.getWidth(), mSearchTextEditor.getHeight(), 0));

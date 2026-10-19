@@ -128,6 +128,8 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
         }
         stereo.addView(logical, logicalParams);
         callback.root = stereo;
+        RayNeoKeyboard.bind(stereo);
+        stereo.getViewTreeObserver().addOnGlobalLayoutListener(() -> RayNeoKeyboard.bind(stereo));
         window.setCallback(callback);
         content.addView(stereo, new FrameLayout.LayoutParams(-1, -1));
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -155,7 +157,10 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
     }
 
     @Override public boolean dispatchTouchEvent(MotionEvent event) {
-        return (active() && input.handle(event)) || super.dispatchTouchEvent(event);
+        if (active() && input.handle(event)) return true;
+        boolean handled = super.dispatchTouchEvent(event);
+        if (active()) RayNeoKeyboard.touch(root, event);
+        return handled;
     }
 
     @Override public boolean dispatchGenericMotionEvent(MotionEvent event) {
@@ -175,8 +180,12 @@ public final class RayNeoWindow extends WindowCallbackWrapper {
         super.onWindowFocusChanged(focused);
     }
 
+    @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        return (active() && RayNeoKeyboard.key(root, event)) || super.dispatchKeyEvent(event);
+    }
+
     private boolean dispatchNavigationKey(KeyEvent event) {
-        return super.dispatchKeyEvent(event);
+        return dispatchKeyEvent(event);
     }
 
     private void action(int keyCode) {

@@ -131,7 +131,7 @@ public class GuidedActionAdapterGroup {
         // before editing started. see also GuidedActionEditText where setFocusable(false).
         v.setFocusable(true);
         v.requestFocus();
-        mgr.showSoftInput(v, 0);
+        if (!com.liskovsoft.sharedutils.helpers.Helpers.presentKeyboard(v)) mgr.showSoftInput(v, 0);
         if (!mImeOpened) {
             mImeOpened = true;
             mEditListener.onImeOpen();
@@ -143,7 +143,7 @@ public class GuidedActionAdapterGroup {
             mImeOpened = false;
             InputMethodManager mgr = (InputMethodManager)
                     v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
+            if (!com.liskovsoft.sharedutils.helpers.Helpers.dismissKeyboard(v)) mgr.hideSoftInputFromWindow(v.getWindowToken(), 0);
             mEditListener.onImeClose();
         }
     }

@@ -52,6 +52,7 @@ android {
 }
 
 dependencies {
+    api project(':embedded-input')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'androidx.appcompat:appcompat:' + appCompatXVersion

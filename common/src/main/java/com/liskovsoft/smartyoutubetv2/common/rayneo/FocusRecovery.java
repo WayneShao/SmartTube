@@ -13,7 +13,7 @@ import java.util.List;
 
 /** Resolves current navigation state; old references are hints, never click targets. */
 final class FocusRecovery {
-    private final StereoLayout root;
+    private final android.view.ViewGroup root;
     private WeakReference<View> previous = new WeakReference<>(null);
     private final List<WeakReference<View>> regions = new ArrayList<>();
     private WeakReference<ListView> previousList = new WeakReference<>(null);
@@ -26,7 +26,7 @@ final class FocusRecovery {
         @Override public void onInvalidated() { dataChanged = true; }
     };
 
-    FocusRecovery(StereoLayout root) { this.root = root; }
+    FocusRecovery(android.view.ViewGroup root) { this.root = root; }
 
     boolean inside(View view) {
         if (view == null || view == root || !view.isAttachedToWindow() || !view.isShown()

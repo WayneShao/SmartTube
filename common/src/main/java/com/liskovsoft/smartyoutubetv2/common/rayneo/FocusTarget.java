@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 /** A delayed confirm belongs to the original focused content and adapter. */
 final class FocusTarget {
-    final StereoLayout owner;
+    final android.view.ViewGroup owner;
     final View view;
     private final Object tag;
     private final String text;
@@ -35,7 +35,7 @@ final class FocusTarget {
         @Override public void onInvalidated() { changed = true; }
     };
 
-    FocusTarget(StereoLayout root) {
+    FocusTarget(android.view.ViewGroup root) {
         owner = root;
         view = root.findFocus();
         tag = view == null ? null : view.getTag();
@@ -58,7 +58,7 @@ final class FocusTarget {
         }
     }
 
-    boolean valid(StereoLayout current) {
+    boolean valid(android.view.ViewGroup current) {
         return !changed && owner == current && view != null && owner.findFocus() == view && belongsToOwner(view)
                 && view.getTag() == tag
                 && (text == null || text.contentEquals(((TextView) view).getText()))

@@ -58,6 +58,7 @@ public class MainApplication extends MultiDexApplication implements Configuratio
     public void onCreate() {
         super.onCreate();
         com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoMessagePresenter.install(this);
+        com.liskovsoft.smartyoutubetv2.common.rayneo.RayNeoKeyboard.install(this);
 
         // ByeByeDPI fix
         // https://android-review.googlesource.com/c/platform/external/conscrypt/+/89408/
